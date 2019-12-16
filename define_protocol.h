@@ -5,6 +5,22 @@
 
 #pragma pack(push, 1)
 
+typedef struct trainMacro{
+    unsigned char trainnum1 = 0x00;
+    unsigned char trainnum2 = 0x00;
+    unsigned char trainspeed = 0x00;
+    unsigned char curcode = 0x00;
+    unsigned char nxtcode = 0x00;
+    unsigned char dstcode = 0x00;
+    unsigned char rundist1 = 0x00;
+    unsigned char rundist2 = 0x00;
+    uchar DCW:1;
+    uchar DOW2:1;
+    uchar DOW1:1;
+    uchar DIR:1;
+}trainMacro;
+
+
 typedef struct SDR{
     uchar stx;			     /*Start data = 0x02*/
     uchar toAddress;         /*To Address = 0x70*/
@@ -157,9 +173,10 @@ typedef struct SD{
     uchar VUD;          /*version upper digit*/
     uchar VDD;          /*version down digit*/
 
+    uchar etx;
+
     uchar bcc1;              /*Block check character1*/
     uchar bcc2;              /*Block check character2*/
-
 
 }SD;
 

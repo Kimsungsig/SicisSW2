@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QDebug>
+#include <define_protocol.h>
 
 namespace Ui {
 class MainWindow;
@@ -20,12 +21,14 @@ public slots:
     void serial_connect();
     void serial_rescan();
     void widget_changed();
-    void send_test();
     void serial_received();
     void on_PUSH_clicked();
-    void on_textEdit_destroyed();
-    void readDateSet(QString data, int j);
+    void on_textEdit_destroyed(struct trainMacro data);
+//    void readDateSet(QString data, int j);
 
+
+private slots:
+    void on_pushButton_2_clicked();
 
 private:
     Ui::MainWindow *ui;
