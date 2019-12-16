@@ -134,7 +134,7 @@ void MainWindow::serial_received()
         memcpy(hex2, read_Data2.constData(), resize);
         qDebug() << "test3 " << resize;
         for (int j=0; j<resize; j++){
-            hex[j] = ;
+            hex[j] = 1;// 수정
         }
         for(int i=0; i<resize; i++){
             hex[i+read_Data2.size()] = hex2[i];
