@@ -22,14 +22,12 @@ unsigned char SDRDATA[27];
 unsigned char *SDRDATA2 = new unsigned char[27];
 
 SDR sendData;
-
 SDR *sendData2 = new SDR;
-
 SD recData;
-
 SD *recData2 = new SD;
-
 QSerialPort *serial;
+int readDataCheck=0;
+unsigned char* Inhex = new unsigned char[30];
 
 QString getStringFromUnsignedChar( unsigned char str ){
     QString result = "";
@@ -64,7 +62,7 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(ui->slider2, SIGNAL(valueChanged(int)), this, SLOT(widget_changed()));
         connect(ui->dial, SIGNAL(valueChanged(int)), this, SLOT(widget_changed()));
         connect(serial, SIGNAL(readyRead()), this, SLOT(serial_received()));
-        connect(ui->pushButton,SIGNAL(clicked()),this,SLOT(serial_received()));
+        //connect(ui->pushButton,SIGNAL(clicked()),this,SLOT(serial_received()));
         serial_rescan();
 }
 
@@ -108,43 +106,73 @@ void MainWindow::widget_changed()
     ui->lcd_led2->display(ui->slider2->value());
     ui->lcd_pwm->display(ui->dial->value());
 }
-
 void MainWindow::serial_received()
 {
-    //delay();
-    this->ui->textEdit_3->clear();
     unsigned char bcc1 = 0x00;
     unsigned char bcc2 = 0x00;
-    qDebug() << "Read ready data ↓";
-    QByteArray read_Data;
-    read_Data = serial->readAll();
-    unsigned char* hex = new unsigned char[read_Data.size()];
-    memcpy(hex, read_Data.constData(), read_Data.size());
-    memcpy(&recData, read_Data.constData(),sizeof(SD));
-    qDebug() << "Read data ↓";
-    qDebug() << read_Data.size();
-    qDebug() << hex;
-
-    if (read_Data.size() < 24){
-        qDebug() << "test2 ";
+    if(readDataCheck>0 && readDataCheck<30) // 현제는 일반데이터 값 30이니까. 이후에 필요시 변경.
+    {
+        this->ui->textEdit_3->clear(); // 일단 지우고
+        qDebug() << "one more read data ↓";
         QByteArray read_Data2;
-        int resize = 24-read_Data.size();
-        read_Data2 = serial->readLine();
+        read_Data2 = serial->readAll();
+        qDebug() << read_Data2.size();
+        int resize = 30-readDataCheck;
         unsigned char* hex2 = new unsigned char[resize];
         memcpy(hex2, read_Data2.constData(), resize);
-        qDebug() << "test3 " << resize;
-        for (int j=0; j<resize; j++){
-            hex[j] = 1;// 수정
-        }
+
         for(int i=0; i<resize; i++){
-            hex[i+read_Data2.size()] = hex2[i];
-            qDebug() << hex[i+read_Data.size()];
-            qDebug() << hex2[i];
+            Inhex[i+readDataCheck] = hex2[i];
         }
+        this->ui->textEdit_10->clear();
+        this->ui->textEdit_11->clear();
+        for(int i=0; i<resize; i++){
+            this->ui->textEdit_10->insertHtml(getStringFromUnsignedChar(hex2[i]));
+        }
+        for(int i=0; i<30; i++){
+            this->ui->textEdit_11->insertHtml(getStringFromUnsignedChar(Inhex[i]));
+        }
+
+        readDataCheck = 30; // 이건 다시읽어온 값인데. 기존의 정상데이터..값을..
+    }
+    else
+    {
+        this->ui->textEdit_3->clear();
+        qDebug() << "Read ready data ↓";
+        QByteArray read_Data;
+        read_Data = serial->readAll();
+        this->ui->textEdit_9->clear();
+        this->ui->textEdit_9->insertHtml(read_Data.toHex());
+        readDataCheck = read_Data.size();
+        //unsigned char* hex = new unsigned char[read_Data.size()];
+        //unsigned char* hex = new unsigned char[30];
+        memcpy(Inhex, read_Data.constData(), read_Data.size());
+        memcpy(&recData, read_Data.constData(),sizeof(SD));
+        qDebug() << "Read data ↓";
+        qDebug() << read_Data.size();
+        qDebug() << Inhex;
     }
 
+//    if (read_Data.size() < 24){
+//        qDebug() << "test2 ";
+//        QByteArray read_Data2;
+//        int resize = 24-read_Data.size();
+//        read_Data2 = serial->readLine();
+//        unsigned char* hex2 = new unsigned char[resize];
+//        memcpy(hex2, read_Data2.constData(), resize);
+//        qDebug() << "test3 " << resize;
+//        for (int j=0; j<resize; j++){
+//            hex[j] = hex[resize+j];// 수정
+//        } // 여기서 기초값 들어온걸 다시 셋팅.
+//        for(int i=0; i<resize; i++){
+//            hex[i+read_Data2.size()] = hex2[i];
+//            qDebug() << hex[i+read_Data.size()];
+//            qDebug() << hex2[i];
+//        }
+//    }
+
     for(int i=0; i<24; i++){
-        this->ui->textEdit_3->insertHtml(getStringFromUnsignedChar(hex[i]));
+        this->ui->textEdit_3->insertHtml(getStringFromUnsignedChar(Inhex[i]));
     }
 
     bcc1 = 0x00;
@@ -152,10 +180,10 @@ void MainWindow::serial_received()
     for(int z=1; z<=24; z++)
     {
         if(z%2==0){
-            bcc1 = bcc1^hex[z];
+            bcc1 = bcc1^Inhex[z];
         }
         else{
-            bcc2 = bcc2^hex[z];
+            bcc2 = bcc2^Inhex[z];
             }
     }
 
@@ -516,7 +544,6 @@ void MainWindow::on_PUSH_clicked()
     TM.DOW1=0;
     TM.DIR=0;
 
-    QThread thread;
     while(1)
     {
         qDebug() << "ONE";
