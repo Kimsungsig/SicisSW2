@@ -24,7 +24,7 @@ public slots:
     void serial_received();
     void on_PUSH_clicked();
     void on_textEdit_destroyed(struct trainMacro data);
-//    void readDateSet(QString data, int j);
+    void train_set(struct trainMacro traindata);
 
 
 private slots:

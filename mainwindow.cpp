@@ -28,6 +28,7 @@ SD *recData2 = new SD;
 QSerialPort *serial;
 int readDataCheck=0;
 unsigned char* Inhex = new unsigned char[30];
+unsigned char rundist = 0x00;
 
 QString getStringFromUnsignedChar( unsigned char str ){
     QString result = "";
@@ -144,32 +145,12 @@ void MainWindow::serial_received()
         this->ui->textEdit_9->clear();
         this->ui->textEdit_9->insertHtml(read_Data.toHex());
         readDataCheck = read_Data.size();
-        //unsigned char* hex = new unsigned char[read_Data.size()];
-        //unsigned char* hex = new unsigned char[30];
         memcpy(Inhex, read_Data.constData(), read_Data.size());
         memcpy(&recData, read_Data.constData(),sizeof(SD));
         qDebug() << "Read data ↓";
         qDebug() << read_Data.size();
         qDebug() << Inhex;
     }
-
-//    if (read_Data.size() < 24){
-//        qDebug() << "test2 ";
-//        QByteArray read_Data2;
-//        int resize = 24-read_Data.size();
-//        read_Data2 = serial->readLine();
-//        unsigned char* hex2 = new unsigned char[resize];
-//        memcpy(hex2, read_Data2.constData(), resize);
-//        qDebug() << "test3 " << resize;
-//        for (int j=0; j<resize; j++){
-//            hex[j] = hex[resize+j];// 수정
-//        } // 여기서 기초값 들어온걸 다시 셋팅.
-//        for(int i=0; i<resize; i++){
-//            hex[i+read_Data2.size()] = hex2[i];
-//            qDebug() << hex[i+read_Data.size()];
-//            qDebug() << hex2[i];
-//        }
-//    }
 
     for(int i=0; i<24; i++){
         this->ui->textEdit_3->insertHtml(getStringFromUnsignedChar(Inhex[i]));
@@ -431,8 +412,6 @@ void MainWindow::serial_received()
             ui->spinBox_25->setValue(recData.sp_byte2);
             ui->spinBox_26->setValue(recData.sp_byte3);
 
-            //if(recData.sp_Bit6 > 0)
-            //    ui->radioButton_57->setChecked(true);
             if(recData.pei2_3c==1)
                 ui->checkBox_82->setChecked(true);
             else
@@ -458,8 +437,6 @@ void MainWindow::serial_received()
             else
                 ui->checkBox_87->setChecked(false);
 
-            //if(recData.sp_Bit7 > 0)
-            //    ui->radioButton_57->setChecked(true);
             if(recData.pei2_3t==1)
                 ui->checkBox_88->setChecked(true);
             else
@@ -499,33 +476,112 @@ void MainWindow::serial_received()
     }
 }
 
-//void MainWindow::readDateSet(QString data, int j)
-//{
-//    QString test = "0x01" ;
-//    unsigned char test2[1];
-//    memcpy( test2, data.toStdString().c_str() ,data.size());
+void MainWindow::train_set(struct trainMacro traindata)
+{
+    int countdata=0;
+    for(countdata=0; countdata<14; countdata++)
+    {
+        if (countdata == 0) {
+            traindata.trainspeed = 0x00; // 출발
+            traindata.rundist2 = rundist;
+            traindata.DIR = 1;
+        }
+        else if (countdata == 1) {
+            traindata.trainspeed = 0x05; // 속도 5
+            rundist = rundist + 1;
+            traindata.rundist2 = rundist;
+            traindata.DIR = 1;
+        }
+        else if (countdata == 2) {
+            traindata.trainspeed = 0x0a; // 속도 10
+            rundist = rundist + 1;
+            traindata.rundist2 = rundist;
+            traindata.DIR = 1;
+        }
+        else if (countdata == 3) {
+            traindata.trainspeed = 0x0F; // 속도 15
+            rundist = rundist + 1;
+            traindata.rundist2 = rundist;
+            traindata.DIR = 1;
+        }
+        else if (countdata == 4) {
+            traindata.trainspeed = 0x14; // 속도 20
+            rundist = rundist + 2;
+            traindata.rundist2 = rundist;
+            traindata.DIR = 1;
+        }
+        else if (countdata == 5) {
+            traindata.trainspeed = 0x19; // 속도 25
+            rundist = rundist + 2;
+            traindata.rundist2 = rundist;
+            traindata.DIR = 1;
+        }
+        else if (countdata == 6) {
+            traindata.trainspeed = 0x1E; // 속도 30
+            rundist = rundist + 3;
+            traindata.rundist2 = rundist;
+            traindata.DIR = 1;
+        }
+        else if (countdata == 7) {
+            traindata.trainspeed = 0x19; // 속도 25
+            rundist = rundist + 2;
+            traindata.rundist2 = rundist;
+            traindata.DIR = 1;
+        }
+        else if (countdata == 8) {
+            traindata.trainspeed = 0x14; // 속도 20
+            rundist = rundist + 2;
+            traindata.rundist2 = rundist;
+            traindata.DIR = 1;
+        }
+        else if (countdata == 9) {
+            traindata.trainspeed = 0x0F; // 속도 15
+            rundist = rundist + 2;
+            traindata.rundist2 = rundist;
+            traindata.DIR = 1;
+        }
+        else if (countdata == 10) {
+            traindata.trainspeed = 0x0a; // 속도 10
+            rundist = rundist + 1;
+            traindata.rundist2 = rundist;
+            traindata.DIR = 1;
+        }
+        else if (countdata == 11) {
+            traindata.trainspeed = 0x05; // 속도 5
+            rundist = rundist + 1;
+            traindata.rundist2 = rundist;
+            traindata.DIR = 1;
+        }
+        else if (countdata == 12) {
+            traindata.trainspeed = 0x00; // 멈춤, 도어열림
+            traindata.rundist2 = rundist;
+            traindata.DIR = 0;
+        }
+        else if (countdata == 13) {
+            traindata.trainspeed = 0x00; // 도어닫힘
+            traindata.rundist2 = rundist;
+            traindata.DIR = 1;
+        }
 
-//    QByteArray ba = data.toLocal8Bit();
-//    //unsigned char check1 = 0x80;
-//    unsigned char check = 0x00;
+        qDebug() << "rundist=" << rundist;
+        if (traindata.trainspeed == 0x00){
+             traindata.DCW=0;
+             traindata.DOW1=0;
+        }
+        else{
+             traindata.DCW=1;
+             traindata.DOW1=1;
+        }
+            on_textEdit_destroyed(traindata);
+            if (rundist == 0xFF)
+            {
+                traindata.rundist1 = traindata.rundist1 + 1;
+                rundist = 0x00;
+            }
+            delay(1);
+    }
 
-//     //헥사변환해야되는경우 확인필요.
-//    if (j==0)      ui->spinBox_20->setValue(data.toInt());//02
-//    else if (j==1) ui->spinBox_20->setValue(data.toInt());//10 TCMS주소
-//    else if (j==2)   ui->spinBox_21->setValue(data.toInt());//70 통합제어장치주소
-//    else if (j==3)   ui->spinBox_22->setValue(data.toInt());//20 데이터 타입
-
-//    if(j==4){
-//        qDebug() <<test2;
-//        if(test2[1] & check)
-//        {
-
-//        }
-//    }
-//    //ui->radioButton->click();//방송중
-//    //ui->radioButton_2->click();
-
-//}
+}
 
 void MainWindow::on_PUSH_clicked()
 {
@@ -543,6 +599,7 @@ void MainWindow::on_PUSH_clicked()
     TM.DOW2=0;
     TM.DOW1=0;
     TM.DIR=0;
+    rundist=0;
 
     while(1)
     {
@@ -552,106 +609,42 @@ void MainWindow::on_PUSH_clicked()
         TM.trainnum2 = 0x76;// 열차번호정보
         TM.dstcode = 0x6F; // 종착역 111
         qDebug() << countdata;
-        if(countdata==0) {TM.trainspeed = 0x00; // 첫번째역 출발
-                TM.curcode = 0x65;
-                TM.nxtcode = 0x66;
-                TM.rundist2 = 0x00;
-                TM.DIR=1;
-        }
-        else if(countdata==1) {TM.trainspeed = 0x0a; // 속도 10
-                TM.curcode = 0x65;
-                TM.nxtcode = 0x66;
-                TM.rundist2 = 0x0a;
-                TM.DIR=1;}
-        else if(countdata==2) {TM.trainspeed = 0x14; // 속도 15
-                TM.curcode = 0x65;
-                TM.nxtcode = 0x66;
-                TM.rundist2 = 0x0b;
-                TM.DIR=1;}
-        else if(countdata==3) {TM.trainspeed = 0x0a; // 속도 10
-                TM.curcode = 0x65;
-                TM.nxtcode = 0x66;
-                TM.rundist2 = 0x0c;
-                TM.DIR=1;}
-        else if(countdata==4) {TM.trainspeed = 0x00; // 멈춤, 도어열림
-                TM.curcode = 0x65;
-                TM.nxtcode = 0x66;
-                TM.rundist2 = 0x0d;
-                TM.DIR=0;}
-        else if(countdata==5) {TM.trainspeed = 0x00; // 도어닫힘
-                TM.curcode = 0x65;
-                TM.nxtcode = 0x66;
-                TM.rundist2 = 0x0d;
-                TM.DIR=1;}
-        else if(countdata==6) {TM.trainspeed = 0x0a; // 속도 10
-                TM.curcode = 0x66;
-                TM.nxtcode = 0x67;
-                TM.rundist2 = 0x0e;
-                TM.DIR=1;}
-        else if(countdata==7) {TM.trainspeed = 0x14; // 속도 15
-                TM.curcode = 0x66;
-                TM.nxtcode = 0x67;
-                TM.rundist2 = 0x0f;
-                TM.DIR=1;}
-        else if(countdata==8) {TM.trainspeed = 0x0a; // 속도 10
-                TM.curcode = 0x66;
-                TM.nxtcode = 0x67;
-                TM.rundist2 = 0x10;
-                TM.DIR=1;}
-        else if(countdata==9) {TM.trainspeed = 0x00; // 멈춤, 도어열림
-                TM.curcode = 0x66;
-                TM.nxtcode = 0x67;
-                TM.rundist2 = 0x11;
-                TM.DIR=0;}
-        else if(countdata==10) {TM.trainspeed = 0x00; // 도어닫힘
-                TM.curcode = 0x66;
-                TM.nxtcode = 0x67;
-                TM.rundist2 = 0x11;
-                TM.DIR=1;}
-        else if(countdata==11) {TM.trainspeed = 0x0a; // 속도 10
-                TM.curcode = 0x67;
-                TM.nxtcode = 0x68;
-                TM.rundist2 = 0x11;
-                TM.DIR=1;}
-        else if(countdata==12) {TM.trainspeed = 0x14; // 속도 15
-                TM.curcode = 0x67;
-                TM.nxtcode = 0x68;
-                TM.rundist2 = 0x11;
-                TM.DIR=1;}
-        else if(countdata==13) {TM.trainspeed = 0x14; // 속도 15
-                TM.curcode = 0x67;
-                TM.nxtcode = 0x68;
-                TM.rundist2 = 0x11;
-                TM.DIR=1;}
-        else if(countdata==14) {TM.trainspeed = 0x14; // 속도 10
-                TM.curcode = 0x67;
-                TM.nxtcode = 0x68;
-                TM.rundist2 = 0x11;
-                TM.DIR=1;}
-        else if(countdata==15) {TM.trainspeed = 0x00; // 멈춤, 도어열림
-                TM.curcode = 0x67;
-                TM.nxtcode = 0x68;
-                TM.rundist2 = 0x11;
-                TM.DIR=0;}
-        else if(countdata==16) {TM.trainspeed = 0x00; // 도어닫힘
-                TM.curcode = 0x67;
-                TM.nxtcode = 0x68;
-                TM.rundist2 = 0x11;
-                TM.DIR=1;}
+        TM.curcode = 0x65;
+        TM.nxtcode = 0x66;
+        train_set(TM);
+        TM.curcode = 0x66;
+        TM.nxtcode = 0x67;
+        train_set(TM);
+        TM.curcode = 0x67;
+        TM.nxtcode = 0x68;
+        train_set(TM);
+        TM.curcode = 0x69;
+        TM.nxtcode = 0x6a;
+        train_set(TM);
+        TM.curcode = 0x6a;
+        TM.nxtcode = 0x6b;
+        train_set(TM);
+        TM.curcode = 0x6b;
+        TM.nxtcode = 0x6c;
+        train_set(TM);
+        TM.curcode = 0x6c;
+        TM.nxtcode = 0x6d;
+        train_set(TM);
+        TM.curcode = 0x6d;
+        TM.nxtcode = 0x6e;
+        train_set(TM);
+        TM.curcode = 0x6e;
+        TM.nxtcode = 0x6f;
+        train_set(TM);
+        TM.curcode = 0x6f;
+        TM.nxtcode = 0x70;
+        train_set(TM);
 
-
-        if (TM.trainspeed == 0x00){
-             TM.DCW=0;
-             TM.DOW1=0;
-        }
-        else{
-             TM.DCW=1;
-             TM.DOW1=1;
-        }
-        on_textEdit_destroyed(TM);
+        //on_textEdit_destroyed(TM);
         countdata++;
          qDebug() << "two";
-         delay(3);
+         delay(10);
+         this->ui->textEdit_2->insertHtml("1 싸이클 over and 10 second wait,,,");
     }
 }
 
@@ -694,7 +687,7 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
     SDRDATA[1] = ui->spinBox->value();
     sendData2->fromAddress = ui->spinBox_2->value();//열차 모니터 장치(TCMS)의 Data 주소는 10H이다.
     SDRDATA[2] = ui->spinBox_2->value();
-    sendData2->dataType = ui->spinBox_3->value();// Data타입  Data 요청 과 응답이 같네...?
+    sendData2->dataType = ui->spinBox_3->value();// 데이터 타입
     SDRDATA[3] = ui->spinBox_3->value();
     sendData2->year = ui->spinBox_4->value();//year
     SDRDATA[4] = ui->spinBox_4->value();
@@ -738,7 +731,7 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
 
     sendData2->runDist2 = data.rundist2;// 주행거리 2
     SDRDATA[17] = data.rundist2;
-    ui->spinBox_16->setValue(data.rundist2);
+    ui->spinBox_17->setValue(data.rundist2);
 
     sendData2->sp_byte0 = ui->spinBox_18->value(); // SPARE
     SDRDATA[18] = ui->spinBox_18->value();
@@ -761,7 +754,6 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
     else if (countdata == 1)   {sendData2->drive_EM=1;
                 inData2 += 0x10;}
 
-    //QCheckBox
     if (ui->checkBox1->isChecked() == true){ // 구원운전 스위치
         sendData2->ros=1;
         inData2 += 0x08;
@@ -956,15 +948,6 @@ void MainWindow::on_pushButton_2_clicked()
     recData2->VUD=0x20;
     recData2->VDD=0x10;
 
-    //   for(int z=1; z<=24; z++)
-    //   {
-    //   if(z%2=0){
-    //   bcc1 = bcc1^recData[z];
-    //   }
-    //   else{
-    //   bcc2 = bcc2^recData[z];
-    //   }
-    //   }
     recData2->etx = 0x03;
 
     recData2->bcc1=0xBD;
