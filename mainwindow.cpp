@@ -134,7 +134,7 @@ void MainWindow::serial_received()
             this->ui->textEdit_11->insertHtml(getStringFromUnsignedChar(Inhex[i]));
         }
 
-        readDataCheck = 30; // 이건 다시읽어온 값인데. 기존의 정상데이터..값을..
+        readDataCheck = 30; // 이건 다시읽어온 값인데.필요시 바꿔준다.
     }
     else
     {
@@ -618,6 +618,9 @@ void MainWindow::on_PUSH_clicked()
         TM.curcode = 0x67;
         TM.nxtcode = 0x68;
         train_set(TM);
+        TM.curcode = 0x68;
+        TM.nxtcode = 0x69;
+        train_set(TM);
         TM.curcode = 0x69;
         TM.nxtcode = 0x6a;
         train_set(TM);
@@ -636,15 +639,12 @@ void MainWindow::on_PUSH_clicked()
         TM.curcode = 0x6e;
         TM.nxtcode = 0x6f;
         train_set(TM);
-        TM.curcode = 0x6f;
-        TM.nxtcode = 0x70;
-        train_set(TM);
 
         //on_textEdit_destroyed(TM);
         countdata++;
          qDebug() << "two";
          delay(10);
-         this->ui->textEdit_2->insertHtml("1 싸이클 over and 10 second wait,,,");
+         this->ui->textEdit_11->insertHtml("1 싸이클 over and 10 second wait,,,");
     }
 }
 
