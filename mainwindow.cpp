@@ -24,11 +24,12 @@ unsigned char *SDRDATA2 = new unsigned char[27];
 SDR sendData;
 SDR *sendData2 = new SDR;
 SD recData;
-SD *recData2 = new SD;
 QSerialPort *serial;
 int readDataCheck=0;
 unsigned char* Inhex = new unsigned char[30];
 unsigned char rundist = 0x00;
+
+int pushWhile = 1;
 
 QString getStringFromUnsignedChar( unsigned char str ){
     QString result = "";
@@ -63,7 +64,10 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(ui->slider2, SIGNAL(valueChanged(int)), this, SLOT(widget_changed()));
         connect(ui->dial, SIGNAL(valueChanged(int)), this, SLOT(widget_changed()));
         connect(serial, SIGNAL(readyRead()), this, SLOT(serial_received()));
-        //connect(ui->pushButton,SIGNAL(clicked()),this,SLOT(serial_received()));
+
+
+        //PUSH_2
+        //connect(ui->PUSH_2,SIGNAL(clicked()), this, SLOT(whilestop()));
         serial_rescan();
 }
 
@@ -125,14 +129,14 @@ void MainWindow::serial_received()
         for(int i=0; i<resize; i++){
             Inhex[i+readDataCheck] = hex2[i];
         }
-        this->ui->textEdit_10->clear();
-        this->ui->textEdit_11->clear();
-        for(int i=0; i<resize; i++){
-            this->ui->textEdit_10->insertHtml(getStringFromUnsignedChar(hex2[i]));
-        }
-        for(int i=0; i<30; i++){
-            this->ui->textEdit_11->insertHtml(getStringFromUnsignedChar(Inhex[i]));
-        }
+//        this->ui->textEdit_10->clear();
+//        this->ui->textEdit_11->clear();
+//        for(int i=0; i<resize; i++){
+//            this->ui->textEdit_10->insertHtml(getStringFromUnsignedChar(hex2[i]));
+//        }
+//        for(int i=0; i<30; i++){
+//            this->ui->textEdit_11->insertHtml(getStringFromUnsignedChar(Inhex[i]));
+//        }
 
         readDataCheck = 30; // 이건 다시읽어온 값인데.필요시 바꿔준다.
     }
@@ -462,8 +466,8 @@ void MainWindow::serial_received()
             else
                 ui->checkBox_93->setChecked(false);
 
-        ui->spinBox_27->setValue(recData.sp_byte4);
-        ui->spinBox_28->setValue(recData.sp_byte5);
+        //ui->spinBox_27->setValue(recData.sp_byte4);
+        //ui->spinBox_28->setValue(recData.sp_byte5);
 
         ui->spinBox_29->setValue(recData.VUD);
         ui->spinBox_30->setValue(recData.VDD);
@@ -579,12 +583,14 @@ void MainWindow::train_set(struct trainMacro traindata)
                 rundist = 0x00;
             }
             delay(1);
+
+            if(pushWhile==0)
+                countdata=14;
     }
-
 }
-
 void MainWindow::on_PUSH_clicked()
 {
+    pushWhile=1;
     int countdata=0;
     trainMacro TM;
     TM.trainnum1 = 0x00;
@@ -601,50 +607,70 @@ void MainWindow::on_PUSH_clicked()
     TM.DIR=0;
     rundist=0;
 
-    while(1)
+    while(pushWhile==1)
     {
         qDebug() << "ONE";
         // 여기서 샛강~서울대 시나리오값 인자로 넘겨서 각각 값에 따라 처리하도록 한다.
         TM.trainnum1 = 0x03;
         TM.trainnum2 = 0x76;// 열차번호정보
         TM.dstcode = 0x6F; // 종착역 111
-        qDebug() << countdata;
         TM.curcode = 0x65;
         TM.nxtcode = 0x66;
         train_set(TM);
+        if(pushWhile==0)
+            continue;
+        qDebug() << pushWhile;
         TM.curcode = 0x66;
         TM.nxtcode = 0x67;
         train_set(TM);
+        if(pushWhile==0)
+            continue;
         TM.curcode = 0x67;
         TM.nxtcode = 0x68;
         train_set(TM);
+        if(pushWhile==0)
+            continue;
         TM.curcode = 0x68;
         TM.nxtcode = 0x69;
         train_set(TM);
+        if(pushWhile==0)
+            continue;
         TM.curcode = 0x69;
         TM.nxtcode = 0x6a;
         train_set(TM);
+        if(pushWhile==0)
+            continue;
         TM.curcode = 0x6a;
         TM.nxtcode = 0x6b;
         train_set(TM);
+        if(pushWhile==0)
+            continue;
         TM.curcode = 0x6b;
         TM.nxtcode = 0x6c;
         train_set(TM);
+        if(pushWhile==0)
+            continue;
         TM.curcode = 0x6c;
         TM.nxtcode = 0x6d;
         train_set(TM);
+        if(pushWhile==0)
+            continue;
         TM.curcode = 0x6d;
         TM.nxtcode = 0x6e;
         train_set(TM);
+        if(pushWhile==0)
+            continue;
         TM.curcode = 0x6e;
         TM.nxtcode = 0x6f;
         train_set(TM);
+        if(pushWhile==0)
+            continue;
 
         //on_textEdit_destroyed(TM);
         countdata++;
          qDebug() << "two";
          delay(10);
-         this->ui->textEdit_11->insertHtml("1 싸이클 over and 10 second wait,,,");
+         //this->ui->textEdit_11->insertHtml("1 싸이클 over and 10 second wait,,,");
     }
 }
 
@@ -658,14 +684,20 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
 
     this->ui->textEdit_2->clear();
     QString time2 = QDateTime::currentDateTime().toString(Qt::TextDate);
-    qDebug() << time2;
+    qDebug() << "현제시간 : "<< time2;
     time2.remove(0,2);
     month = time2.left(2);
     ui->spinBox_5->setValue(month.toInt());
-    time2.remove(0,3);
+    if (month.toInt()>=10)
+        time2.remove(0,3);
+    else
+        time2.remove(0,2);
     day = time2.left(2);
     ui->spinBox_6->setValue(day.toInt());
-    time2.remove(0,3);
+    if (day.toInt()>=10)
+        time2.remove(0,3);
+    else
+        time2.remove(0,2);
     hour = time2.left(2);
     ui->spinBox_7->setValue(hour.toInt());
     time2.remove(0,3);
@@ -784,6 +816,12 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
         sendData2->fd1=1;
         inData3 += 0x20;
     }
+
+    if(data.DIR==1)
+        ui->checkBox_8->setChecked(true);
+    else
+        ui->checkBox_8->setChecked(false);
+
     if (ui->checkBox_8->isChecked() == true){ // 전체 출입문 닫힘
         sendData2->dir=1;
         inData3 += 0x10;
@@ -809,6 +847,20 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
     //spinBox_24
     sendData2->sp_bit1 = ui->spinBox_24->value();
     inData4 += ui->spinBox_24->value();
+
+    if(data.DCW==1){
+        ui->checkBox_13->setChecked(true);}
+    else{
+        ui->checkBox_13->setChecked(false);}
+    if(data.DOW2==1)
+        ui->checkBox_14->setChecked(true);
+    else
+        ui->checkBox_14->setChecked(false);
+    if(data.DOW1==1)
+        ui->checkBox_15->setChecked(true);
+    else
+        ui->checkBox_15->setChecked(false);
+
     if (ui->checkBox_13->isChecked() == true){ //
         sendData2->dcw=1;
         inData4 += 0x04;
@@ -857,107 +909,554 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
     {
         this->ui->textEdit_2->insertHtml(getStringFromUnsignedChar(SDRDATA[i]));
     }
-
+    this->ui->textEdit_9->clear();
+    this->ui->textEdit_9->insertHtml(getStringFromUnsignedChar(SDRDATA[ui->spinBox_34->value()]));
 }
-
 
 void MainWindow::on_pushButton_2_clicked()
 {
+    SD *recData2 = new SD;
     recData2->stx = 0x02;
-    recData2->toAddress = 0x10;
-    recData2->fromAddress = 0x70;
-    recData2->dataType= 0x20;
-    recData2->onbrc=1;
-    recData2->slave=0;
-    recData2->master=1;
+    recData2->toAddress = ui->spinBox_20->value();; //spinBox_20
+    recData2->fromAddress = ui->spinBox_21->value();;
+    recData2->dataType= ui->spinBox_22->value();;
+    if (ui->checkBox_30->isChecked() == true)
+        recData2->onbrc=1;
+    if (ui->checkBox_31->isChecked() == true)
+        recData2->slave=1;
+    if (ui->checkBox_32->isChecked() == true)
+        recData2->master=1;
 
-    recData2->pa_Ok=1;
-    recData2->pa_Ng=0;
-    recData2->pis_Ok=0;
-    recData2->pis_Ng=1;
-    recData2->onTest=1;
+    if (ui->checkBox_33->isChecked() == true)
+        recData2->pa_Ok=1;
+    else
+        recData2->pa_Ok=0;
+    if (ui->checkBox_34->isChecked() == true)
+        recData2->pa_Ng=1;
+    else
+        recData2->pa_Ng=0;
+    if (ui->checkBox_35->isChecked() == true)
+        recData2->pis_Ok=1;
+    else
+        recData2->pis_Ok=0;
+    if (ui->checkBox_36->isChecked() == true)
+        recData2->pis_Ng=1;
+    else
+        recData2->pis_Ng=0;
+    if (ui->checkBox_96->isChecked() == true)
+        recData2->onTest=1;
+    else
+        recData2->onTest=0;
 
     //recData2->sp_byte;
+    if (ui->checkBox_37->isChecked() == true)
+        recData2->fcam1f=1;
+    else
+        recData2->fcam1f=0;
+    if (ui->checkBox_38->isChecked() == true)
+        recData2->scam2_1f=1;
+    else
+        recData2->scam2_1f=0;
+    if (ui->checkBox_39->isChecked() == true)
+        recData2->scam1_1f=1;
+    else
+        recData2->scam1_1f=0;
+    if (ui->checkBox_40->isChecked() == true)
+        recData2->pei2_1f=1;
+    else
+        recData2->pei2_1f=0;
+    if (ui->checkBox_41->isChecked() == true)
+        recData2->pei1_1f=1;
+    else
+        recData2->pei1_1f=0;
+    if (ui->checkBox_42->isChecked() == true)
+        recData2->pamp1f=1;
+    else
+        recData2->pamp1f=0;
+    if (ui->checkBox_43->isChecked() == true)
+        recData2->cop1f=1;
+    else
+        recData2->cop1f=0;
+    if (ui->checkBox_44->isChecked() == true)
+        recData2->avc1f=1;
+    else
+        recData2->avc1f=0;
 
-    recData2->fcam1f=1;
-    recData2->scam2_1f=1;
-    recData2->scam1_1f=1;
-    recData2->pei2_1f=1;
-    recData2->pei1_1f=1;
-    recData2->pamp1f=1;
-    recData2->cop1f=1;
-    recData2->avc1f=1;
+    if (ui->checkBox_45->isChecked() == true)
+        recData2->esw2_1f=1;
+    else
+        recData2->esw2_1f=0;
+    if (ui->checkBox_46->isChecked() == true)
+        recData2->esw1_1f=1;
+    else
+        recData2->esw1_1f=0;
+    if (ui->checkBox_47->isChecked() == true)
+        recData2->lcd4_1f=1;
+    else
+        recData2->lcd4_1f=0;
+    if (ui->checkBox_48->isChecked() == true)
+        recData2->lcd3_1f=1;
+    else
+        recData2->lcd3_1f=0;
+    if (ui->checkBox_49->isChecked() == true)
+        recData2->lcd2_1f=1;
+    else
+        recData2->lcd2_1f=0;
+    if (ui->checkBox_50->isChecked() == true)
+        recData2->lcd1_1f=1;
+    else
+        recData2->lcd1_1f=0;
+    if (ui->checkBox_51->isChecked() == true)
+        recData2->led2_1f=1;
+    else
+        recData2->led2_1f=0;
+    if (ui->checkBox_52->isChecked() == true)
+        recData2->led1_1f=1;
+    else
+        recData2->led1_1f=0;
 
-    recData2->esw2_1f=1;
-    recData2->esw1_1f=1;
-    recData2->lcd4_1f=1;
-    recData2->lcd3_1f=1;
-    recData2->lcd2_1f=1;
-    recData2->lcd1_1f=1;
-    recData2->led2_1f=1;
-    recData2->led1_1f=1;
+    if (ui->checkBox_25->isChecked() == true)
+        recData2->sp_Bit4=1;
+    else
+        recData2->sp_Bit4=0;
+    if (ui->checkBox_53->isChecked() == true)
+        recData2->scam2_2f=1;
+    else
+        recData2->scam2_2f=0;
+    if (ui->checkBox_54->isChecked() == true)
+        recData2->scam1_2f=1;
+    else
+        recData2->scam1_2f=0;
+    if (ui->checkBox_55->isChecked() == true)
+        recData2->pei2_2f=1;
+    else
+        recData2->pei2_2f=0;
+    if (ui->checkBox_56->isChecked() == true)
+        recData2->pei1_2f=1;
+    else
+        recData2->pei1_2f=0;
+    if (ui->checkBox_57->isChecked() == true)
+        recData2->pamp2f=1;
+    else
+        recData2->pamp2f=0;
 
-    recData2->sp_Bit4=1;
-    recData2->scam2_2f=1;
-    recData2->scam1_2f=1;
-    recData2->pei2_2f=1;
-    recData2->pei1_2f=1;
-    recData2->pamp2f=1;
+    if (ui->checkBox_58->isChecked() == true)
+        recData2->esw2_2f=1;
+    else
+        recData2->esw2_2f=0;
+    if (ui->checkBox_59->isChecked() == true)
+        recData2->esw1_2f=1;
+    else
+        recData2->esw1_2f=0;
+    if (ui->checkBox_60->isChecked() == true)
+        recData2->lcd4_2f=1;
+    else
+        recData2->lcd4_2f=0;
+    if (ui->checkBox_61->isChecked() == true)
+        recData2->lcd3_2f=1;
+    else
+        recData2->lcd3_2f=0;
+    if (ui->checkBox_62->isChecked() == true)
+        recData2->lcd2_2f=1;
+    else
+        recData2->lcd2_2f=0;
+    if (ui->checkBox_63->isChecked() == true)
+        recData2->lcd1_2f=1;
+    else
+        recData2->lcd1_2f=0;
+    if (ui->checkBox_64->isChecked() == true)
+        recData2->led2_2f=1;
+    else
+        recData2->led2_2f=0;
+    if (ui->checkBox_65->isChecked() == true)
+        recData2->led1_2f=1;
+    else
+        recData2->led1_2f=0;
 
-    recData2->esw2_2f=1;
-    recData2->esw1_2f=1;
-    recData2->lcd4_2f=1;
-    recData2->lcd3_2f=1;
-    recData2->lcd2_2f=1;
-    recData2->lcd1_2f=1;
-    recData2->led2_2f=1;
-    recData2->led1_2f=1;
+    if (ui->checkBox_66->isChecked() == true)
+        recData2->fcam3f=1;
+    else
+        recData2->fcam3f=0;
+    if (ui->checkBox_67->isChecked() == true)
+        recData2->scan2_3f=1;
+    else
+        recData2->scan2_3f=0;
+    if (ui->checkBox_68->isChecked() == true)
+        recData2->scan1_3f=1;
+    else
+        recData2->scan1_3f=0;
+    if (ui->checkBox_69->isChecked() == true)
+        recData2->pei2_3f=1;
+    else
+        recData2->pei2_3f=0;
+    if (ui->checkBox_70->isChecked() == true)
+        recData2->pei1_3f=1;
+    else
+        recData2->pei1_3f=0;
+    if (ui->checkBox_71->isChecked() == true)
+        recData2->pemp3f=1;
+    else
+        recData2->pemp3f=0;
+    if (ui->checkBox_72->isChecked() == true)
+        recData2->cop3f=1;
+    else
+        recData2->cop3f=0;
+    if (ui->checkBox_73->isChecked() == true)
+        recData2->avc3f=1;
+    else
+        recData2->avc3f=0;
 
-    recData2->fcam3f=1;
-    recData2->scan2_3f=1;
-    recData2->scan1_3f=1;
-    recData2->pei2_3f=1;
-    recData2->pei1_3f=1;
-    recData2->pemp3f=1;
-    recData2->cop3f=1;
-    recData2->avc3f=1;
+    if (ui->checkBox_74->isChecked() == true)
+        recData2->esw2_3f=1;
+    else
+        recData2->esw2_3f=0;
+    if (ui->checkBox_75->isChecked() == true)
+        recData2->esw1_3f=1;
+    else
+        recData2->esw1_3f=0;
+    if (ui->checkBox_76->isChecked() == true)
+        recData2->lcd4_3f=1;
+    else
+        recData2->lcd4_3f=0;
+    if (ui->checkBox_77->isChecked() == true)
+        recData2->lcd3_3f=1;
+    else
+        recData2->lcd3_3f=0;
+    if (ui->checkBox_78->isChecked() == true)
+        recData2->lcd2_3f=1;
+    else
+        recData2->lcd2_3f=0;
+    if (ui->checkBox_79->isChecked() == true)
+        recData2->lcd1_3f=1;
+    else
+        recData2->lcd1_3f=0;
+    if (ui->checkBox_80->isChecked() == true)
+        recData2->led2_3f=1;
+    else
+        recData2->led2_3f=0;
+    if (ui->checkBox_81->isChecked() == true)
+        recData2->led1_3f=1;
+    else
+        recData2->led1_3f=0;
 
-    recData2->esw2_3f=1;
-    recData2->esw1_3f=1;
-    recData2->lcd4_3f=1;
-    recData2->lcd3_3f=1;
-    recData2->lcd2_3f=1;
-    recData2->lcd1_3f=1;
-    recData2->led2_3f=1;
-    recData2->led1_3f=1;
+    if (ui->checkBox_82->isChecked() == true)
+        recData2->pei2_3c=1;
+    else
+        recData2->pei2_3c=0;
+    if (ui->checkBox_83->isChecked() == true)
+        recData2->pei1_3c=1;
+    else
+        recData2->pei1_3c=0;
+    if (ui->checkBox_84->isChecked() == true)
+        recData2->pei2_2c=1;
+    else
+        recData2->pei2_2c=0;
+    if (ui->checkBox_85->isChecked() == true)
+        recData2->pei1_2c=1;
+    else
+        recData2->pei1_2c=0;
+    if (ui->checkBox_86->isChecked() == true)
+        recData2->pei2_1c=1;
+    else
+        recData2->pei2_1c=0;
+    if (ui->checkBox_87->isChecked() == true)
+        recData2->pei1_1c=1;
+    else
+        recData2->pei1_1c=0;
 
-    recData2->pei2_3c=1;
-    recData2->pei1_3c=1;
-    recData2->pei2_2c=1;
-    recData2->pei1_2c=1;
-    recData2->pei2_1c=1;
-    recData2->pei1_1c=1;
+    if (ui->checkBox_88->isChecked() == true)
+        recData2->pei2_3t=1;
+    else
+        recData2->pei2_3t=0;
+    if (ui->checkBox_89->isChecked() == true)
+        recData2->pei1_3t=1;
+    else
+        recData2->pei1_3t=0;
+    if (ui->checkBox_90->isChecked() == true)
+        recData2->pei2_2t=1;
+    else
+        recData2->pei2_2t=0;
+    if (ui->checkBox_91->isChecked() == true)
+        recData2->pei1_2t=1;
+    else
+        recData2->pei1_2t=0;
+    if (ui->checkBox_92->isChecked() == true)
+        recData2->pei2_1t=1;
+    else
+        recData2->pei2_1t=0;
+    if (ui->checkBox_93->isChecked() == true)
+        recData2->pei1_1t=1;
+    else
+        recData2->pei1_1t=0;
 
-    recData2->pei2_3t=1;
-    recData2->pei1_3t=1;
-    recData2->pei2_2t=1;
-    recData2->pei1_2t=1;
-    recData2->pei2_1t=1;
-    recData2->pei1_1t=1;
-
-    recData2->VUD=0x20;
-    recData2->VDD=0x10;
+    //ui->spinBox_29->setValue(recData.toAddress);
+    recData2->VUD = ui->spinBox_29->value();
+    recData2->VDD = ui->spinBox_30->value();
 
     recData2->etx = 0x03;
 
-    recData2->bcc1=0xBD;
-    recData2->bcc2=0x3C;
+    recData2->bcc1=ui->spinBox_32->value();;
+    recData2->bcc2=ui->spinBox_33->value();;
+
+    //recData2->sp_Bit1=0;
+    //recData2->sp_Bit2=0;
+    recData2->sp_Bit3=0;
+    recData2->sp_Bit4=0;
+    recData2->sp_Bit5=0;
+    recData2->sp_Bit6=0;
+    recData2->sp_Bit7=0;
+    recData2->sp_byte1=0;
+    recData2->sp_byte2=0;
+    recData2->sp_byte3=0;
+    recData2->sp_byte4=0;
+    recData2->sp_byte5=0;
 
     auto send = reinterpret_cast<char *>(recData2);
     serial->write(send,sizeof(SD));
     QByteArray byteArray(send,sizeof(SD)); // 용도가?
     qDebug() << "write" << byteArray.toHex();
-    this->ui->textEdit_2->clear();
-    this->ui->textEdit_2->insertHtml(byteArray.toHex());
+    this->ui->textEdit_10->clear();
+    this->ui->textEdit_10->insertHtml(byteArray.toHex());
 
 }
+
+void MainWindow::on_PUSH_2_clicked()
+{
+    pushWhile=0;
+    qDebug()<< "pushWhile=" << pushWhile;
+}
+
+void MainWindow::on_PUSH_3_clicked()
+{
+    //SDR *onedata = new SDR;
+    unsigned char inData2 = 0x00;
+    unsigned char inData3 = 0x00;
+    unsigned char inData4 = 0x00;
+    unsigned char bcc1 = 0x00;
+    unsigned char bcc2 = 0x00;
+
+    this->ui->textEdit_2->clear();
+    QString time2 = QDateTime::currentDateTime().toString(Qt::TextDate);
+    qDebug() << "현제시간 : "<< time2;
+    time2.remove(0,2);
+    month = time2.left(2);
+    ui->spinBox_5->setValue(month.toInt());
+    if (month.toInt()>=10)
+        time2.remove(0,3);
+    else
+        time2.remove(0,2);
+    day = time2.left(2);
+    ui->spinBox_6->setValue(day.toInt());
+    if (day.toInt()>=10)
+        time2.remove(0,3);
+    else
+        time2.remove(0,2);
+    hour = time2.left(2);
+    ui->spinBox_7->setValue(hour.toInt());
+    time2.remove(0,3);
+    min = time2.left(2);
+    ui->spinBox_8->setValue(min.toInt());
+    time2.remove(0,3);
+    sec = time2.left(2);
+    ui->spinBox_9->setValue(sec.toInt());
+    time2.remove(0,5);
+    year = time2.left(2);
+    ui->spinBox_4->setValue(year.toInt());
+    time2.clear();
+
+    this->ui->textEdit->setText( "Data set OK");
+
+    sendData2->stx = 0x02; // STX 시작값
+    SDRDATA[0] = sendData2->stx;
+    sendData2->toAddress = ui->spinBox->value();//추진 제어 장치(통합제어장치)의 Data 주소는 70H 이다.
+    SDRDATA[1] = ui->spinBox->value();
+    sendData2->fromAddress = ui->spinBox_2->value();//열차 모니터 장치(TCMS)의 Data 주소는 10H이다.
+    SDRDATA[2] = ui->spinBox_2->value();
+    sendData2->dataType = ui->spinBox_3->value();// 데이터 타입
+    SDRDATA[3] = ui->spinBox_3->value();
+    sendData2->year = ui->spinBox_4->value();//year
+    SDRDATA[4] = ui->spinBox_4->value();
+    sendData2->month = ui->spinBox_5->value();//month
+    SDRDATA[5] = ui->spinBox_5->value();
+    sendData2->day = ui->spinBox_6->value();//day
+    SDRDATA[6] = ui->spinBox_6->value();
+    sendData2->hour = ui->spinBox_7->value();//hour
+    SDRDATA[7] = ui->spinBox_7->value();
+    sendData2->min = ui->spinBox_8->value();//minute
+    SDRDATA[8] = ui->spinBox_8->value();
+    sendData2->sec = ui->spinBox_9->value();//second
+    SDRDATA[9] = ui->spinBox_9->value();
+    sendData2->trainNum1 = ui->spinBox_10->value();
+    SDRDATA[10] = ui->spinBox_10->value();
+    sendData2->trainNum2 = ui->spinBox_11->value();
+    SDRDATA[11] = ui->spinBox_11->value();
+    sendData2->speed = ui->spinBox_12->value();// 속도 SPEED
+    SDRDATA[12] = ui->spinBox_12->value();
+
+    sendData2->curCode = ui->spinBox_13->value();// 현재역 코드 SURCODE
+    SDRDATA[13] = ui->spinBox_13->value();
+
+    sendData2->nxtCode = ui->spinBox_14->value();// 다음역 코드 NXTCODE
+    SDRDATA[14] = ui->spinBox_14->value();
+
+    sendData2->dstCode = ui->spinBox_15->value();// 종착역 코드 DSTCODE
+    SDRDATA[15] = ui->spinBox_15->value();
+
+    sendData2->runDist1 = ui->spinBox_16->value();// 주행거리 RUNDIST
+    SDRDATA[16] = ui->spinBox_16->value();
+
+    sendData2->runDist2 = ui->spinBox_17->value();// 주행거리 2
+    SDRDATA[17] = ui->spinBox_17->value();
+
+    sendData2->sp_byte0 = ui->spinBox_18->value(); // SPARE
+    SDRDATA[18] = ui->spinBox_18->value();
+
+    if (ui->checkBox_16->isChecked() == true) // 시험요청여부
+        sendData2->test_start_req=1;
+    sendData2->sp_bit0 = ui->spinBox_23->value(); // spare
+    if (sendData2->test_start_req==1)
+        SDRDATA[19] = sendData2->sp_bit0 + 0x80;
+    else
+        SDRDATA[19] = sendData2->sp_bit0;
+
+    int countdata = ui->comboBox->count();//운전모드
+    if (countdata == 0){sendData2->drive_DM=1;
+                inData2 += 0x80;}
+    else if (countdata == 1)   {sendData2->drive_AM=1;
+                inData2 += 0x40;}
+    else if (countdata == 2)   {sendData2->drive_MM=1;
+                inData2 += 0x20;}
+    else if (countdata == 1)   {sendData2->drive_EM=1;
+                inData2 += 0x10;}
+
+    if (ui->checkBox1->isChecked() == true){ // 구원운전 스위치
+        sendData2->ros=1;
+        inData2 += 0x08;
+    }
+    if (ui->checkBox_2->isChecked() == true){ // 정지속도 검출
+        sendData2->zvr=1;
+        inData2 += 0x04;
+    }
+    if (ui->checkBox_3->isChecked() == true){ // 3호차MC2측 HCR투입
+        sendData2->mc2Hcr=1;
+        inData2 += 0x02;
+    }
+    if (ui->checkBox_4->isChecked() == true){ // 1호차MC1측 HCR투입
+        sendData2->mc1Hcr=1;
+        inData2 += 0x01;
+    }
+    SDRDATA[20] = inData2; //
+
+    if (ui->checkBox_5->isChecked() == true){ // 3호차 화재발생
+        sendData2->fd3=1;
+        inData3 += 0x80;
+    }
+    if (ui->checkBox_6->isChecked() == true){ // 2호차 화재발생
+        sendData2->fd2=1;
+        inData3 += 0x40;
+    }
+    if (ui->checkBox_7->isChecked() == true){ // 1호차 화재발생
+        sendData2->fd1=1;
+        inData3 += 0x20;
+    }
+
+//    if(data.DIR==1)
+//        ui->checkBox_8->setChecked(true);
+//    else
+//        ui->checkBox_8->setChecked(false);
+
+    if (ui->checkBox_8->isChecked() == true){ // 전체 출입문 닫힘
+        sendData2->dir=1;
+        inData3 += 0x10;
+    }
+    if (ui->checkBox_9->isChecked() == true){ // 3호차 2위 열림 계전기
+        sendData2->dor2_3=1;
+        inData3 += 0x08;
+    }
+    if (ui->checkBox_10->isChecked() == true){ // 3호차 1위 열림 계전기
+        sendData2->dor1_3=1;
+        inData3 += 0x04;
+    }
+    if (ui->checkBox_11->isChecked() == true){ // 1호차 2위 열림 계전기
+        sendData2->dor2_1=1;
+        inData3 += 0x02;
+    }
+    if (ui->checkBox_12->isChecked() == true){ // 1호차 1위 열림 계전기
+        sendData2->dor1_1=1;
+        inData3 += 0x01;
+    }
+    SDRDATA[21] = inData3;
+
+    //spinBox_24
+    sendData2->sp_bit1 = ui->spinBox_24->value();
+    inData4 += ui->spinBox_24->value();
+
+//    if(data.DCW==1){
+//        ui->checkBox_13->setChecked(true);}
+//    else{
+//        ui->checkBox_13->setChecked(false);}
+//    if(data.DOW2==1)
+//        ui->checkBox_14->setChecked(true);
+//    else
+//        ui->checkBox_14->setChecked(false);
+//    if(data.DOW1==1)
+//        ui->checkBox_15->setChecked(true);
+//    else
+//        ui->checkBox_15->setChecked(false);
+
+    if (ui->checkBox_13->isChecked() == true){ //
+        sendData2->dcw=1;
+        inData4 += 0x04;
+    }
+    if (ui->checkBox_14->isChecked() == true){ //
+        sendData2->dow2=1;
+        inData4 += 0x02;
+    }
+    if (ui->checkBox_15->isChecked() == true){ //
+        sendData2->dow1=1;
+        inData4 += 0x04;
+    }
+    SDRDATA[22] = inData4;
+
+    sendData2->lifeCnt = ui->spinBox_19->value();
+    SDRDATA[23] = sendData2->lifeCnt;
+
+    int additem= ui->spinBox_19->value();
+    if (additem == 255)
+        additem = 0;
+    ui->spinBox_19->setValue(additem+1);
+
+    sendData2->etx = 0x03;; // ETX 종료값
+    SDRDATA[24] = sendData2->etx;
+
+    for(int z=1; z<=24; z++)
+    {
+        if(z%2==0){
+            qDebug() << "z=" << z;
+            bcc1 = bcc1^SDRDATA[z];
+        }
+        else{
+            qDebug() << "z2=" << z;
+            bcc2 = bcc2^SDRDATA[z];
+            }
+    }
+
+    SDRDATA[25] = bcc1;
+    sendData2->bcc1 = bcc1;
+    SDRDATA[26] = bcc2; //BCC2
+    sendData2->bcc2 = bcc2;
+
+    auto send = reinterpret_cast<char *>(sendData2);
+    serial->write(send,sizeof(SDR));
+    QByteArray byteArray(send,sizeof(SDR)); // 용도가?
+    qDebug() << "write" << byteArray.toHex();
+    for(int i=0; i<=26; i++)
+    {
+        this->ui->textEdit_2->insertHtml(getStringFromUnsignedChar(SDRDATA[i]));
+    }
+    this->ui->textEdit_9->clear();
+    this->ui->textEdit_9->insertHtml(getStringFromUnsignedChar(SDRDATA[ui->spinBox_34->value()]));
+}
+
+
+
