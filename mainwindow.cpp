@@ -7,6 +7,7 @@
 #include <QMessageBox>
 #include <qDebug>
 #include <Qstring>
+//#include <studio.h>
 #include <QtGui>
 #include <QTime>
 #include <windows.h>
@@ -18,16 +19,17 @@ QString hour;
 QString min;
 QString sec;
 QString sec2;
-unsigned char SDRDATA[27];
-unsigned char *SDRDATA2 = new unsigned char[27];
+//unsigned char SDRDATA[27];
+//unsigned char SDDATA[24];
+//unsigned char *SDRDATA2 = new unsigned char[27];
 
-SDR sendData;
-SDR *sendData2 = new SDR;
-SD recData;
+//SDR sendData;
+//SDR *sendData2 = new SDR;
 QSerialPort *serial;
 int readDataCheck=0;
 unsigned char* Inhex = new unsigned char[30];
 unsigned char rundist = 0x00;
+//SD *recData = new SD;
 
 int pushWhile = 1;
 
@@ -80,9 +82,9 @@ MainWindow::~MainWindow()
 void MainWindow::serial_connect()
 {
         serial->setPortName(ui->port_box->currentText());
-        serial->setBaudRate(QSerialPort::Baud115200);
+        serial->setBaudRate(QSerialPort::Baud19200);
         serial->setDataBits(QSerialPort::Data8);
-        serial->setParity(QSerialPort::NoParity);
+        serial->setParity(QSerialPort::EvenParity);
         serial->setStopBits(QSerialPort::OneStop);
         serial->setFlowControl(QSerialPort::NoFlowControl);
         this->ui->textEdit->insertHtml("port connect OK");
@@ -113,19 +115,24 @@ void MainWindow::widget_changed()
 }
 void MainWindow::serial_received()
 {
+    //SD recData;
+    //SD *recData = new SD;
     unsigned char bcc1 = 0x00;
     unsigned char bcc2 = 0x00;
-    if(readDataCheck>0 && readDataCheck<30) // 현제는 일반데이터 값 30이니까. 이후에 필요시 변경.
+
+    //memset(recData,0,sizeof(SD));
+
+    if(readDataCheck>0 && readDataCheck<24) // 현제는 일반데이터 값 30이니까. 이후에 필요시 변경.
     {
         this->ui->textEdit_3->clear(); // 일단 지우고
         qDebug() << "one more read data ↓";
         QByteArray read_Data2;
         read_Data2 = serial->readAll();
         qDebug() << read_Data2.size();
-        int resize = 30-readDataCheck;
+        int resize = 24-readDataCheck;
         unsigned char* hex2 = new unsigned char[resize];
         memcpy(hex2, read_Data2.constData(), resize);
-
+        //memcpy(recData, read_Data2.constData(),sizeof(SD));
         for(int i=0; i<resize; i++){
             Inhex[i+readDataCheck] = hex2[i];
         }
@@ -138,22 +145,23 @@ void MainWindow::serial_received()
 //            this->ui->textEdit_11->insertHtml(getStringFromUnsignedChar(Inhex[i]));
 //        }
 
-        readDataCheck = 30; // 이건 다시읽어온 값인데.필요시 바꿔준다.
+        readDataCheck = 24; // 이건 다시읽어온 값인데.필요시 바꿔준다.
     }
     else
     {
+        //memset(recData,0,sizeof(SD));
         this->ui->textEdit_3->clear();
-        qDebug() << "Read ready data ↓";
         QByteArray read_Data;
         read_Data = serial->readAll();
-        this->ui->textEdit_9->clear();
-        this->ui->textEdit_9->insertHtml(read_Data.toHex());
+        //this->ui->textEdit_9->clear();
+        //this->ui->textEdit_9->insertHtml(read_Data.toHex());
         readDataCheck = read_Data.size();
         memcpy(Inhex, read_Data.constData(), read_Data.size());
-        memcpy(&recData, read_Data.constData(),sizeof(SD));
+        //memcpy(recData, read_Data.constData(),sizeof(SD));
         qDebug() << "Read data ↓";
         qDebug() << read_Data.size();
-        qDebug() << Inhex;
+//        qDebug() << Inhex;
+//        qDebug() << recData;
     }
 
     for(int i=0; i<24; i++){
@@ -162,7 +170,7 @@ void MainWindow::serial_received()
 
     bcc1 = 0x00;
     bcc2 = 0x00;
-    for(int z=1; z<=24; z++)
+    for(int z=1; z<=21; z++)
     {
         if(z%2==0){
             bcc1 = bcc1^Inhex[z];
@@ -172,311 +180,324 @@ void MainWindow::serial_received()
             }
     }
 
-    if (bcc1 != recData.bcc1){
-        qDebug() << "Not bcc1 samsam";
-        qDebug() << recData.bcc1;
-        qDebug() << bcc1;
-    }
-    if (bcc2 != recData.bcc2){
-        qDebug() << "Not bcc2 samsam";
-        qDebug() << recData.bcc2;
-        qDebug() << bcc2;
-    }
+        if (bcc2 != Inhex[22]){
+            qDebug() << "Not bcc1 samsam";
+            qDebug() << Inhex[22];
+            qDebug() << bcc2;
+        }
+        if (bcc1 != Inhex[23]){
+            qDebug() << "Not bcc2 samsam";
+            qDebug() << Inhex[23];
+            qDebug() << bcc1;
+        }
 
-    if (recData.stx == 0x02)
-        {
-            ui->spinBox_20->setValue(recData.toAddress);
-            ui->spinBox_21->setValue(recData.fromAddress);
-            ui->spinBox_22->setValue(recData.dataType);
-            if(recData.onbrc==1)
-                ui->checkBox_30->setChecked(true);
-            else
-                ui->checkBox_30->setChecked(false);
-            if(recData.slave==1)
-                ui->checkBox_31->setChecked(true);
-            else
-                ui->checkBox_31->setChecked(false);
-            if(recData.master==1)
-                ui->checkBox_32->setChecked(true);
-            else
-                ui->checkBox_32->setChecked(false);
-            if(recData.pa_Ok==1)
-                ui->checkBox_33->setChecked(true);
-            else
-                ui->checkBox_33->setChecked(false);
-            if(recData.pa_Ng==1)
-                ui->checkBox_34->setChecked(true);
-            else
-                ui->checkBox_34->setChecked(false);
-            if(recData.pis_Ok==1)
-                ui->checkBox_35->setChecked(true);
-            else
-                ui->checkBox_35->setChecked(false);
-            if(recData.pis_Ng==1)
-                ui->checkBox_36->setChecked(true);
-            else
-                ui->checkBox_36->setChecked(false);
-            if(recData.onTest==1)
-                ui->checkBox_96->setChecked(true);
-            else
-                ui->checkBox_96->setChecked(false);
+        if (Inhex[0] == 0x02)
+            {
+                ui->spinBox_20->setValue(Inhex[1]);
+                ui->spinBox_21->setValue(Inhex[2]);
+                ui->spinBox_22->setValue(Inhex[3]);
+                if(	Inhex[4] & 0x04)
+                    ui->checkBox_30->setChecked(true);
+                else
+                    ui->checkBox_30->setChecked(false);
+                if(Inhex[4] & 0x02)
+                    ui->checkBox_31->setChecked(true);
+                else
+                    ui->checkBox_31->setChecked(false);
+                if(Inhex[4] & 0x01)
+                    ui->checkBox_32->setChecked(true);
+                else
+                    ui->checkBox_32->setChecked(false);
 
-            ui->spinBox_31->setValue(recData.sp_byte1);
+                if(Inhex[5] & 0x10)
+                    ui->checkBox_33->setChecked(true);
+                else
+                    ui->checkBox_33->setChecked(false);
+                if(Inhex[5] & 0x08)
+                    ui->checkBox_34->setChecked(true);
+                else
+                    ui->checkBox_34->setChecked(false);
+                if(Inhex[5] & 0x04)
+                    ui->checkBox_35->setChecked(true);
+                else
+                    ui->checkBox_35->setChecked(false);
+                if(Inhex[5] & 0x02)
+                    ui->checkBox_36->setChecked(true);
+                else
+                    ui->checkBox_36->setChecked(false);
+                if(Inhex[5] & 0x01)
+                    ui->checkBox_96->setChecked(true);
+                else
+                    ui->checkBox_96->setChecked(false);
 
-            if(recData.fcam1f==1)
-                ui->checkBox_37->setChecked(true);
-            else
-                ui->checkBox_37->setChecked(false);
-            if(recData.scam2_1f==1)
-                ui->checkBox_38->setChecked(true);
-            else
-                ui->checkBox_38->setChecked(false);
-            if(recData.scam1_1f==1)
-                ui->checkBox_39->setChecked(true);
-            else
-                ui->checkBox_39->setChecked(false);
-            if(recData.pei2_1f==1)
-                ui->checkBox_40->setChecked(true);
-            else
-                ui->checkBox_40->setChecked(false);
-            if(recData.pei1_1f==1)
-                ui->checkBox_41->setChecked(true);
-            else
-                ui->checkBox_41->setChecked(false);
-            if(recData.pamp1f==1)
-                ui->checkBox_42->setChecked(true);
-            else
-                ui->checkBox_42->setChecked(false);
-            if(recData.cop1f==1)
-                ui->checkBox_43->setChecked(true);
-            else
-                ui->checkBox_43->setChecked(false);
-            if(recData.avc1f==1)
-                ui->checkBox_44->setChecked(true);
-            else
-                ui->checkBox_44->setChecked(false);
+                ui->spinBox_31->setValue(Inhex[6]);
 
-            if(recData.esw2_1f==1)
-                ui->checkBox_45->setChecked(true);
-            else
-                ui->checkBox_45->setChecked(false);
-            if(recData.esw1_1f==1)
-                ui->checkBox_46->setChecked(true);
-            else
-                ui->checkBox_46->setChecked(false);
-            if(recData.lcd4_1f==1)
-                ui->checkBox_47->setChecked(true);
-            else
-                ui->checkBox_47->setChecked(false);
-            if(recData.lcd3_1f==1)
-                ui->checkBox_48->setChecked(true);
-            else
-                ui->checkBox_48->setChecked(false);
-            if(recData.lcd2_1f==1)
-                ui->checkBox_49->setChecked(true);
-            else
-                ui->checkBox_49->setChecked(false);
-            if(recData.lcd1_1f==1)
-                ui->checkBox_50->setChecked(true);
-            else
-                ui->checkBox_50->setChecked(false);
-            if(recData.led2_1f==1)
-                ui->checkBox_51->setChecked(true);
-            else
-                ui->checkBox_51->setChecked(false);
-            if(recData.led1_1f==1)
-                ui->checkBox_52->setChecked(true);
-            else
-                ui->checkBox_52->setChecked(false);
+                if(Inhex[7] & 0x80)
+                    ui->checkBox_37->setChecked(true);
+                else
+                    ui->checkBox_37->setChecked(false);
+                if(Inhex[7] & 0x40)
+                    ui->checkBox_38->setChecked(true);
+                else
+                    ui->checkBox_38->setChecked(false);
+                if(Inhex[7] & 0x20)
+                    ui->checkBox_39->setChecked(true);
+                else
+                    ui->checkBox_39->setChecked(false);
+                if(Inhex[7] & 0x10)
+                    ui->checkBox_40->setChecked(true);
+                else
+                    ui->checkBox_40->setChecked(false);
+                if(Inhex[7] & 0x08)
+                    ui->checkBox_41->setChecked(true);
+                else
+                    ui->checkBox_41->setChecked(false);
+                if(Inhex[7] & 0x04)
+                    ui->checkBox_42->setChecked(true);
+                else
+                    ui->checkBox_42->setChecked(false);
+                if(Inhex[7] & 0x02)
+                    ui->checkBox_43->setChecked(true);
+                else
+                    ui->checkBox_43->setChecked(false);
+                if(Inhex[7] & 0x01)
+                    ui->checkBox_44->setChecked(true);
+                else
+                    ui->checkBox_44->setChecked(false);
 
-            if(recData.sp_Bit4==1)
-                ui->checkBox_25->setChecked(true);
-            else
-                ui->checkBox_25->setChecked(false);
-            if(recData.scam2_2f==1)
-                ui->checkBox_53->setChecked(true);
-            else
-                ui->checkBox_53->setChecked(false);
-            if(recData.scam1_2f==1)
-                ui->checkBox_54->setChecked(true);
-            else
-                ui->checkBox_54->setChecked(false);
-            if(recData.pei2_2f==1)
-                ui->checkBox_55->setChecked(true);
-            else
-                ui->checkBox_55->setChecked(false);
-            if(recData.pei1_2f==1)
-                ui->checkBox_56->setChecked(true);
-            else
-                ui->checkBox_56->setChecked(false);
-            if(recData.pamp2f==1)
-                ui->checkBox_57->setChecked(true);
-            else
-                ui->checkBox_57->setChecked(false);
+                if(Inhex[8] & 0x80)
+                    ui->checkBox_45->setChecked(true);
+                else
+                    ui->checkBox_45->setChecked(false);
+                if(Inhex[8] & 0x40)
+                    ui->checkBox_46->setChecked(true);
+                else
+                    ui->checkBox_46->setChecked(false);
+                if(Inhex[8] & 0x20)
+                    ui->checkBox_47->setChecked(true);
+                else
+                    ui->checkBox_47->setChecked(false);
+                if(Inhex[8] & 0x10)
+                    ui->checkBox_48->setChecked(true);
+                else
+                    ui->checkBox_48->setChecked(false);
+                if(Inhex[8] & 0x08)
+                    ui->checkBox_49->setChecked(true);
+                else
+                    ui->checkBox_49->setChecked(false);
+                if(Inhex[8] & 0x04)
+                    ui->checkBox_50->setChecked(true);
+                else
+                    ui->checkBox_50->setChecked(false);
+                if(Inhex[8] & 0x02)
+                    ui->checkBox_51->setChecked(true);
+                else
+                    ui->checkBox_51->setChecked(false);
+                if(Inhex[8] & 0x01)
+                    ui->checkBox_52->setChecked(true);
+                else
+                    ui->checkBox_52->setChecked(false);
 
-            if(recData.esw2_2f==1)
-                ui->checkBox_58->setChecked(true);
-            else
-                ui->checkBox_58->setChecked(false);
-            if(recData.esw1_2f==1)
-                ui->checkBox_59->setChecked(true);
-            else
-                ui->checkBox_59->setChecked(false);
-            if(recData.lcd4_2f==1)
-                ui->checkBox_60->setChecked(true);
-            else
-                ui->checkBox_60->setChecked(false);
-            if(recData.lcd3_2f==1)
-                ui->checkBox_61->setChecked(true);
-            else
-                ui->checkBox_61->setChecked(false);
-            if(recData.lcd2_2f==1)
-                ui->checkBox_62->setChecked(true);
-            else
-                ui->checkBox_62->setChecked(false);
-            if(recData.lcd1_2f==1)
-                ui->checkBox_63->setChecked(true);
-            else
-                ui->checkBox_63->setChecked(false);
-            if(recData.led2_2f==1)
-                ui->checkBox_64->setChecked(true);
-            else
-                ui->checkBox_64->setChecked(false);
-            if(recData.led1_2f==1)
-                ui->checkBox_65->setChecked(true);
-            else
-                ui->checkBox_65->setChecked(false);
+                if(Inhex[9] & 0x80)
+                    ui->checkBox_25->setChecked(true);
+                else
+                    ui->checkBox_25->setChecked(false);
+                if(Inhex[9] & 0x40)
+                    ui->checkBox_53->setChecked(true);
+                else
+                    ui->checkBox_53->setChecked(false);
+                if(Inhex[9] & 0x20)
+                    ui->checkBox_54->setChecked(true);
+                else
+                    ui->checkBox_54->setChecked(false);
+                if(Inhex[9] & 0x10)
+                    ui->checkBox_55->setChecked(true);
+                else
+                    ui->checkBox_55->setChecked(false);
+                if(Inhex[9] & 0x08)
+                    ui->checkBox_56->setChecked(true);
+                else
+                    ui->checkBox_56->setChecked(false);
+                if(Inhex[9] & 0x04)
+                    ui->checkBox_57->setChecked(true);
+                else
+                    ui->checkBox_57->setChecked(false);
 
-            if(recData.fcam3f==1)
-                ui->checkBox_66->setChecked(true);
-            else
-                ui->checkBox_66->setChecked(false);
-            if(recData.scan2_3f==1)
-                ui->checkBox_67->setChecked(true);
-            else
-                ui->checkBox_67->setChecked(false);
-            if(recData.scan1_3f==1)
-                ui->checkBox_68->setChecked(true);
-            else
-                ui->checkBox_68->setChecked(false);
-            if(recData.pei2_3f==1)
-                ui->checkBox_69->setChecked(true);
-            else
-                ui->checkBox_69->setChecked(false);
-            if(recData.pei1_3f==1)
-                ui->checkBox_70->setChecked(true);
-            else
-                ui->checkBox_70->setChecked(false);
-            if(recData.pemp3f==1)
-                ui->checkBox_71->setChecked(true);
-            else
-                ui->checkBox_71->setChecked(false);
-            if(recData.cop3f==1)
-                ui->checkBox_72->setChecked(true);
-            else
-                ui->checkBox_72->setChecked(false);
-            if(recData.avc3f==1)
-                ui->checkBox_73->setChecked(true);
-            else
-                ui->checkBox_73->setChecked(false);
+//recData->esw2_2f==1
+                if(Inhex[10] & 0x80)
+                    ui->checkBox_58->setChecked(true);
+                else
+                    ui->checkBox_58->setChecked(false);
+                if(Inhex[10] & 0x40)
+                    ui->checkBox_59->setChecked(true);
+                else
+                    ui->checkBox_59->setChecked(false);
+                if(Inhex[10] & 0x20)
+                    ui->checkBox_60->setChecked(true);
+                else
+                    ui->checkBox_60->setChecked(false);
+                if(Inhex[10] & 0x10)
+                    ui->checkBox_61->setChecked(true);
+                else
+                    ui->checkBox_61->setChecked(false);
+                if(Inhex[10] & 0x08)
+                    ui->checkBox_62->setChecked(true);
+                else
+                    ui->checkBox_62->setChecked(false);
+                if(Inhex[10] & 0x04)
+                    ui->checkBox_63->setChecked(true);
+                else
+                    ui->checkBox_63->setChecked(false);
+                if(Inhex[10] & 0x02)
+                    ui->checkBox_64->setChecked(true);
+                else
+                    ui->checkBox_64->setChecked(false);
+                if(Inhex[10] & 0x01)
+                    ui->checkBox_65->setChecked(true);
+                else
+                    ui->checkBox_65->setChecked(false);
 
-            if(recData.esw2_3f==1)
-                ui->checkBox_74->setChecked(true);
-            else
-                ui->checkBox_74->setChecked(false);
-            if(recData.esw1_3f==1)
-                ui->checkBox_75->setChecked(true);
-            else
-                ui->checkBox_75->setChecked(false);
-            if(recData.lcd4_3f==1)
-                ui->checkBox_76->setChecked(true);
-            else
-                ui->checkBox_76->setChecked(false);
-            if(recData.lcd3_3f==1)
-                ui->checkBox_77->setChecked(true);
-            else
-                ui->checkBox_77->setChecked(false);
-            if(recData.lcd2_3f==1)
-                ui->checkBox_78->setChecked(true);
-            else
-                ui->checkBox_78->setChecked(false);
-            if(recData.lcd1_3f==1)
-                ui->checkBox_79->setChecked(true);
-            else
-                ui->checkBox_79->setChecked(false);
-            if(recData.led2_3f==1)
-                ui->checkBox_80->setChecked(true);
-            else
-                ui->checkBox_80->setChecked(false);
-            if(recData.led1_3f==1)
-                ui->checkBox_81->setChecked(true);
-            else
-                ui->checkBox_81->setChecked(false);
+                if(Inhex[11] & 0x80)
+                    ui->checkBox_66->setChecked(true);
+                else
+                    ui->checkBox_66->setChecked(false);
+                if(Inhex[11] & 0x40)
+                    ui->checkBox_67->setChecked(true);
+                else
+                    ui->checkBox_67->setChecked(false);
+                if(Inhex[11] & 0x20)
+                    ui->checkBox_68->setChecked(true);
+                else
+                    ui->checkBox_68->setChecked(false);
+                if(Inhex[11] & 0x10)
+                    ui->checkBox_69->setChecked(true);
+                else
+                    ui->checkBox_69->setChecked(false);
+                if(Inhex[11] & 0x08)
+                    ui->checkBox_70->setChecked(true);
+                else
+                    ui->checkBox_70->setChecked(false);
+                if(Inhex[11] & 0x04)
+                    ui->checkBox_71->setChecked(true);
+                else
+                    ui->checkBox_71->setChecked(false);
+                if(Inhex[11] & 0x02)
+                    ui->checkBox_72->setChecked(true);
+                else
+                    ui->checkBox_72->setChecked(false);
+                if(Inhex[11] & 0x01)
+                    ui->checkBox_73->setChecked(true);
+                else
+                    ui->checkBox_73->setChecked(false);
 
-            ui->spinBox_25->setValue(recData.sp_byte2);
-            ui->spinBox_26->setValue(recData.sp_byte3);
+                if(Inhex[12] & 0x80)
+                    ui->checkBox_74->setChecked(true);
+                else
+                    ui->checkBox_74->setChecked(false);
+                if(Inhex[12] & 0x40)
+                    ui->checkBox_75->setChecked(true);
+                else
+                    ui->checkBox_75->setChecked(false);
+                if(Inhex[12] & 0x20)
+                    ui->checkBox_76->setChecked(true);
+                else
+                    ui->checkBox_76->setChecked(false);
+                if(Inhex[12] & 0x10)
+                    ui->checkBox_77->setChecked(true);
+                else
+                    ui->checkBox_77->setChecked(false);
+                if(Inhex[12] & 0x08)
+                    ui->checkBox_78->setChecked(true);
+                else
+                    ui->checkBox_78->setChecked(false);
+                if(Inhex[12] & 0x04)
+                    ui->checkBox_79->setChecked(true);
+                else
+                    ui->checkBox_79->setChecked(false);
+                if(Inhex[12] & 0x02)
+                    ui->checkBox_80->setChecked(true);
+                else
+                    ui->checkBox_80->setChecked(false);
+                if(Inhex[12] & 0x01)
+                    ui->checkBox_81->setChecked(true);
+                else
+                    ui->checkBox_81->setChecked(false);
 
-            if(recData.pei2_3c==1)
-                ui->checkBox_82->setChecked(true);
-            else
-                ui->checkBox_82->setChecked(false);
-            if(recData.pei1_3c==1)
-                ui->checkBox_83->setChecked(true);
-            else
-                ui->checkBox_83->setChecked(false);
-            if(recData.pei2_2c==1)
-                ui->checkBox_84->setChecked(true);
-            else
-                ui->checkBox_84->setChecked(false);
-            if(recData.pei1_2c==1)
-                ui->checkBox_85->setChecked(true);
-            else
-                ui->checkBox_85->setChecked(false);
-            if(recData.pei2_1c==1)
-                ui->checkBox_86->setChecked(true);
-            else
-                ui->checkBox_86->setChecked(false);
-            if(recData.pei1_1c==1)
-                ui->checkBox_87->setChecked(true);
-            else
-                ui->checkBox_87->setChecked(false);
+                ui->spinBox_25->setValue(Inhex[13]);
+                ui->spinBox_26->setValue(Inhex[14]);
 
-            if(recData.pei2_3t==1)
-                ui->checkBox_88->setChecked(true);
-            else
-                ui->checkBox_88->setChecked(false);
-            if(recData.pei1_3t==1)
-                ui->checkBox_89->setChecked(true);
-            else
-                ui->checkBox_89->setChecked(false);
-            if(recData.pei2_2t==1)
-                ui->checkBox_90->setChecked(true);
-            else
-                ui->checkBox_90->setChecked(false);
-            if(recData.pei1_2t==1)
-                ui->checkBox_91->setChecked(true);
-            else
-                ui->checkBox_90->setChecked(false);
-            if(recData.pei2_1t==1)
-                ui->checkBox_92->setChecked(true);
-            else
-                ui->checkBox_92->setChecked(false);
-            if(recData.pei1_1t==1)
-                ui->checkBox_93->setChecked(true);
-            else
-                ui->checkBox_93->setChecked(false);
+                if(Inhex[15] & 0x20)
+                    ui->checkBox_82->setChecked(true);
+                else
+                    ui->checkBox_82->setChecked(false);
+                if(Inhex[15] & 0x10)
+                    ui->checkBox_83->setChecked(true);
+                else
+                    ui->checkBox_83->setChecked(false);
+                if(Inhex[15] & 0x08)
+                    ui->checkBox_84->setChecked(true);
+                else
+                    ui->checkBox_84->setChecked(false);
+                if(Inhex[15] & 0x04)
+                    ui->checkBox_85->setChecked(true);
+                else
+                    ui->checkBox_85->setChecked(false);
+                if(Inhex[15] & 0x02)
+                    ui->checkBox_86->setChecked(true);
+                else
+                    ui->checkBox_86->setChecked(false);
+                if(Inhex[15] & 0x01)
+                    ui->checkBox_87->setChecked(true);
+                else
+                    ui->checkBox_87->setChecked(false);
 
-        //ui->spinBox_27->setValue(recData.sp_byte4);
-        //ui->spinBox_28->setValue(recData.sp_byte5);
+                if(Inhex[16] & 0x20){
+                    ui->checkBox_88->setChecked(true);
+                    qDebug() << "체크했다";
+                    qDebug() << Inhex[16];
+                }
+                else{
+                    ui->checkBox_88->setChecked(false);
+                    qDebug() << "체크안했다";
+                }
+                if(Inhex[16] & 0x10)
+                    ui->checkBox_89->setChecked(true);
+                else
+                    ui->checkBox_89->setChecked(false);
+                if(Inhex[16] & 0x08)
+                    ui->checkBox_90->setChecked(true);
+                else
+                    ui->checkBox_90->setChecked(false);
+                if(Inhex[16] & 0x04){
+                    ui->checkBox_91->setChecked(true);
+                    qDebug() << "체크되는이유 찾자";
+                }
+                else{
+                    ui->checkBox_91->setChecked(false);
+                    qDebug() << "정상동작중";
+                }
+                if(Inhex[16] & 0x02)
+                    ui->checkBox_92->setChecked(true);
+                else
+                    ui->checkBox_92->setChecked(false);
+                if(Inhex[16] & 0x01)
+                    ui->checkBox_93->setChecked(true);
+                else
+                    ui->checkBox_93->setChecked(false);
 
-        ui->spinBox_29->setValue(recData.VUD);
-        ui->spinBox_30->setValue(recData.VDD);
+        //ui->spinBox_27->setValue(recData.sp_byte4); Inhex[17]
+        //ui->spinBox_28->setValue(recData.sp_byte5); Inhex[18]
 
-        ui->spinBox_32->setValue(recData.bcc1);
-        ui->spinBox_33->setValue(recData.bcc2);
+        ui->spinBox_29->setValue(Inhex[19]);
+        ui->spinBox_30->setValue(Inhex[20]);
+
+
+        ui->spinBox_32->setValue(Inhex[22]);
+        ui->spinBox_33->setValue(Inhex[23]);
     }
     else{
         this->ui->textEdit_3->insertHtml("not data start 02");
+        qDebug() << Inhex[21] << "stx값";
     }
 }
 
@@ -567,7 +588,6 @@ void MainWindow::train_set(struct trainMacro traindata)
             traindata.DIR = 1;
         }
 
-        qDebug() << "rundist=" << rundist;
         if (traindata.trainspeed == 0x00){
              traindata.DCW=0;
              traindata.DOW1=0;
@@ -676,6 +696,8 @@ void MainWindow::on_PUSH_clicked()
 
 void MainWindow::on_textEdit_destroyed(struct trainMacro data)
 {
+    SDR *sendData2 = new SDR;
+    unsigned char SDRDATA[27];
     unsigned char inData2 = 0x00;
     unsigned char inData3 = 0x00;
     unsigned char inData4 = 0x00;
@@ -738,7 +760,7 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
     SDRDATA[10] = data.trainnum1;
             //ui->spinBox_10->value();
     sendData2->trainNum2 = data.trainnum2;
-    ui->spinBox_11->setValue(data.trainnum1);
+    ui->spinBox_11->setValue(data.trainnum2);
     SDRDATA[11] = data.trainnum2;
 
     sendData2->speed = data.trainspeed;// 속도 SPEED
@@ -776,14 +798,14 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
     else
         SDRDATA[19] = sendData2->sp_bit0;
 
-    int countdata = ui->comboBox->count();//운전모드
+    int countdata = ui->comboBox->currentIndex();//운전모드
     if (countdata == 0){sendData2->drive_DM=1;
                 inData2 += 0x80;}
     else if (countdata == 1)   {sendData2->drive_AM=1;
                 inData2 += 0x40;}
     else if (countdata == 2)   {sendData2->drive_MM=1;
                 inData2 += 0x20;}
-    else if (countdata == 1)   {sendData2->drive_EM=1;
+    else if (countdata == 3)   {sendData2->drive_EM=1;
                 inData2 += 0x10;}
 
     if (ui->checkBox1->isChecked() == true){ // 구원운전 스위치
@@ -802,6 +824,7 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
         sendData2->mc1Hcr=1;
         inData2 += 0x01;
     }
+
     SDRDATA[20] = inData2; //
 
     if (ui->checkBox_5->isChecked() == true){ // 3호차 화재발생
@@ -896,12 +919,14 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
             }
     }
 
-    SDRDATA[25] = bcc1;
-    sendData2->bcc1 = bcc1;
-    SDRDATA[26] = bcc2; //BCC2
-    sendData2->bcc2 = bcc2;
+    SDRDATA[25] = bcc2;
+    sendData2->bcc1 = bcc2;
+    SDRDATA[26] = bcc1; //BCC2
+    sendData2->bcc2 = bcc1;
 
-    auto send = reinterpret_cast<char *>(sendData2);
+    //auto send = reinterpret_cast<char *>(sendData2);
+    auto send = reinterpret_cast<char *>(SDRDATA);
+
     serial->write(send,sizeof(SDR));
     QByteArray byteArray(send,sizeof(SDR)); // 용도가?
     qDebug() << "write" << byteArray.toHex();
@@ -915,289 +940,463 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
 
 void MainWindow::on_pushButton_2_clicked()
 {
+    unsigned char SDDATA[24];
     SD *recData2 = new SD;
-    recData2->stx = 0x02;
-    recData2->toAddress = ui->spinBox_20->value();; //spinBox_20
-    recData2->fromAddress = ui->spinBox_21->value();;
-    recData2->dataType= ui->spinBox_22->value();;
-    if (ui->checkBox_30->isChecked() == true)
-        recData2->onbrc=1;
-    if (ui->checkBox_31->isChecked() == true)
-        recData2->slave=1;
-    if (ui->checkBox_32->isChecked() == true)
-        recData2->master=1;
+    unsigned char bcc1= 0x00;
+    unsigned char bcc2= 0x00;
+    unsigned char inData1 = 0x00;
+    unsigned char inData2 = 0x00;
+    unsigned char inData3 = 0x00;
+    unsigned char inData4 = 0x00;
+    unsigned char inData5 = 0x00;
+    unsigned char inData6 = 0x00;
+    unsigned char inData7 = 0x00;
+    unsigned char inData8 = 0x00;
+    unsigned char inData9 = 0x00;
+    unsigned char inData10 = 0x00;
 
-    if (ui->checkBox_33->isChecked() == true)
+    recData2->stx = 0x02;
+    SDDATA[0]=0x02;
+    recData2->toAddress = ui->spinBox_20->value(); //spinBox_20
+    SDDATA[1]=ui->spinBox_20->value();
+    recData2->fromAddress = ui->spinBox_21->value();
+    SDDATA[2]=ui->spinBox_21->value();
+    recData2->dataType= ui->spinBox_22->value();
+    SDDATA[3]=ui->spinBox_22->value();
+
+    if (ui->checkBox_30->isChecked() == true){
+        recData2->onbrc=1;
+        inData1 = inData1 | 0x04;
+    }
+    if (ui->checkBox_31->isChecked() == true){
+        recData2->slave=1;
+        inData1 = inData1 | 0x02;
+    }
+    if (ui->checkBox_32->isChecked() == true){
+        recData2->master=1;
+        inData1 = inData1 | 0x01;
+    }
+    SDDATA[4] = inData1;
+
+    if (ui->checkBox_33->isChecked() == true){
         recData2->pa_Ok=1;
+        inData2 = inData2 | 0x10;
+    }
     else
         recData2->pa_Ok=0;
-    if (ui->checkBox_34->isChecked() == true)
+    if (ui->checkBox_34->isChecked() == true){
         recData2->pa_Ng=1;
+        inData2 = inData2 | 0x08;
+    }
     else
         recData2->pa_Ng=0;
-    if (ui->checkBox_35->isChecked() == true)
+    if (ui->checkBox_35->isChecked() == true){
         recData2->pis_Ok=1;
+        inData2 = inData2 | 0x04;
+    }
     else
         recData2->pis_Ok=0;
-    if (ui->checkBox_36->isChecked() == true)
+    if (ui->checkBox_36->isChecked() == true){
         recData2->pis_Ng=1;
+        inData2 = inData2 | 0x02;
+    }
     else
         recData2->pis_Ng=0;
-    if (ui->checkBox_96->isChecked() == true)
+    if (ui->checkBox_96->isChecked() == true){
         recData2->onTest=1;
+        inData2 = inData2 | 0x01;
+    }
     else
         recData2->onTest=0;
+    SDDATA[5] = inData2;
 
     //recData2->sp_byte;
-    if (ui->checkBox_37->isChecked() == true)
+    if (ui->checkBox_37->isChecked() == true){
         recData2->fcam1f=1;
+        inData3 = inData3 | 0x80;
+    }
     else
         recData2->fcam1f=0;
-    if (ui->checkBox_38->isChecked() == true)
+    if (ui->checkBox_38->isChecked() == true){
         recData2->scam2_1f=1;
+        inData3 = inData3 | 0x40;
+    }
     else
         recData2->scam2_1f=0;
-    if (ui->checkBox_39->isChecked() == true)
+    if (ui->checkBox_39->isChecked() == true){
         recData2->scam1_1f=1;
+        inData3 = inData3 | 0x20;
+    }
     else
         recData2->scam1_1f=0;
-    if (ui->checkBox_40->isChecked() == true)
+    if (ui->checkBox_40->isChecked() == true){
         recData2->pei2_1f=1;
+        inData3 = inData3 | 0x10;
+    }
     else
         recData2->pei2_1f=0;
-    if (ui->checkBox_41->isChecked() == true)
+    if (ui->checkBox_41->isChecked() == true){
         recData2->pei1_1f=1;
+        inData3 = inData3 | 0x08;
+    }
     else
         recData2->pei1_1f=0;
-    if (ui->checkBox_42->isChecked() == true)
+    if (ui->checkBox_42->isChecked() == true){
         recData2->pamp1f=1;
+        inData3 = inData3 | 0x04;
+    }
     else
         recData2->pamp1f=0;
-    if (ui->checkBox_43->isChecked() == true)
+    if (ui->checkBox_43->isChecked() == true){
         recData2->cop1f=1;
+        inData3 = inData3 | 0x02;
+    }
     else
         recData2->cop1f=0;
-    if (ui->checkBox_44->isChecked() == true)
+    if (ui->checkBox_44->isChecked() == true){
         recData2->avc1f=1;
+        inData3 = inData3 | 0x01;
+    }
     else
         recData2->avc1f=0;
 
-    if (ui->checkBox_45->isChecked() == true)
+    SDDATA[7] = inData3;
+
+    if (ui->checkBox_45->isChecked() == true){
         recData2->esw2_1f=1;
+        inData4 = inData4 | 0x80;
+    }
     else
         recData2->esw2_1f=0;
-    if (ui->checkBox_46->isChecked() == true)
+    if (ui->checkBox_46->isChecked() == true){
         recData2->esw1_1f=1;
+        inData4 = inData4 | 0x40;
+    }
     else
         recData2->esw1_1f=0;
-    if (ui->checkBox_47->isChecked() == true)
+    if (ui->checkBox_47->isChecked() == true){
         recData2->lcd4_1f=1;
+        inData4 = inData4 | 0x20;
+    }
     else
         recData2->lcd4_1f=0;
-    if (ui->checkBox_48->isChecked() == true)
+    if (ui->checkBox_48->isChecked() == true){
         recData2->lcd3_1f=1;
+        inData4 = inData4 | 0x10;
+    }
     else
         recData2->lcd3_1f=0;
-    if (ui->checkBox_49->isChecked() == true)
+    if (ui->checkBox_49->isChecked() == true){
         recData2->lcd2_1f=1;
+        inData4 = inData4 | 0x08;
+    }
     else
         recData2->lcd2_1f=0;
-    if (ui->checkBox_50->isChecked() == true)
+    if (ui->checkBox_50->isChecked() == true){
         recData2->lcd1_1f=1;
+        inData4 = inData4 | 0x04;
+    }
     else
         recData2->lcd1_1f=0;
-    if (ui->checkBox_51->isChecked() == true)
+    if (ui->checkBox_51->isChecked() == true){
         recData2->led2_1f=1;
+        inData4 = inData4 | 0x02;
+    }
     else
         recData2->led2_1f=0;
-    if (ui->checkBox_52->isChecked() == true)
+    if (ui->checkBox_52->isChecked() == true){
         recData2->led1_1f=1;
+        inData4 = inData4 | 0x01;
+    }
     else
         recData2->led1_1f=0;
 
-    if (ui->checkBox_25->isChecked() == true)
+    SDDATA[8] = inData4;
+
+    if (ui->checkBox_25->isChecked() == true){
         recData2->sp_Bit4=1;
+        inData5 = inData5 | 0x80;
+    }
     else
         recData2->sp_Bit4=0;
-    if (ui->checkBox_53->isChecked() == true)
+    if (ui->checkBox_53->isChecked() == true){
         recData2->scam2_2f=1;
+        inData5 = inData5 | 0x40;
+    }
     else
         recData2->scam2_2f=0;
-    if (ui->checkBox_54->isChecked() == true)
+    if (ui->checkBox_54->isChecked() == true){
         recData2->scam1_2f=1;
+        inData5 = inData5 | 0x20;
+    }
     else
         recData2->scam1_2f=0;
-    if (ui->checkBox_55->isChecked() == true)
+    if (ui->checkBox_55->isChecked() == true){
         recData2->pei2_2f=1;
+        inData5 = inData5 | 0x10;
+    }
     else
         recData2->pei2_2f=0;
-    if (ui->checkBox_56->isChecked() == true)
+    if (ui->checkBox_56->isChecked() == true){
         recData2->pei1_2f=1;
+        inData5 = inData5 | 0x08;
+    }
     else
         recData2->pei1_2f=0;
-    if (ui->checkBox_57->isChecked() == true)
+    if (ui->checkBox_57->isChecked() == true){
         recData2->pamp2f=1;
+        inData5 = inData5 | 0x04;
+    }
     else
         recData2->pamp2f=0;
 
-    if (ui->checkBox_58->isChecked() == true)
+    SDDATA[9] = inData5;
+
+    if (ui->checkBox_58->isChecked() == true){
         recData2->esw2_2f=1;
+        inData6 = inData6 | 0x80;
+    }
     else
         recData2->esw2_2f=0;
-    if (ui->checkBox_59->isChecked() == true)
+    if (ui->checkBox_59->isChecked() == true){
         recData2->esw1_2f=1;
+        inData6 = inData6 | 0x40;
+    }
     else
         recData2->esw1_2f=0;
-    if (ui->checkBox_60->isChecked() == true)
+    if (ui->checkBox_60->isChecked() == true){
         recData2->lcd4_2f=1;
+        inData6 = inData6 | 0x20;
+    }
     else
         recData2->lcd4_2f=0;
-    if (ui->checkBox_61->isChecked() == true)
+    if (ui->checkBox_61->isChecked() == true){
         recData2->lcd3_2f=1;
+        inData6 = inData6 | 0x10;
+    }
     else
         recData2->lcd3_2f=0;
-    if (ui->checkBox_62->isChecked() == true)
+    if (ui->checkBox_62->isChecked() == true){
         recData2->lcd2_2f=1;
+        inData6 = inData6 | 0x08;
+    }
     else
         recData2->lcd2_2f=0;
-    if (ui->checkBox_63->isChecked() == true)
+    if (ui->checkBox_63->isChecked() == true){
         recData2->lcd1_2f=1;
+        inData6 = inData6 | 0x04;
+    }
     else
         recData2->lcd1_2f=0;
-    if (ui->checkBox_64->isChecked() == true)
+    if (ui->checkBox_64->isChecked() == true){
         recData2->led2_2f=1;
+        inData6 = inData6 | 0x02;
+    }
     else
         recData2->led2_2f=0;
-    if (ui->checkBox_65->isChecked() == true)
+    if (ui->checkBox_65->isChecked() == true){
         recData2->led1_2f=1;
+        inData6 = inData6 | 0x01;
+    }
     else
         recData2->led1_2f=0;
 
-    if (ui->checkBox_66->isChecked() == true)
+    SDDATA[10] = inData6;
+
+    if (ui->checkBox_66->isChecked() == true){
         recData2->fcam3f=1;
+        inData7 = inData7 | 0x80;
+    }
     else
         recData2->fcam3f=0;
-    if (ui->checkBox_67->isChecked() == true)
+    if (ui->checkBox_67->isChecked() == true){
         recData2->scan2_3f=1;
+        inData7 = inData7 | 0x40;
+    }
     else
         recData2->scan2_3f=0;
-    if (ui->checkBox_68->isChecked() == true)
+    if (ui->checkBox_68->isChecked() == true){
         recData2->scan1_3f=1;
+        inData7 = inData7 | 0x20;
+    }
     else
         recData2->scan1_3f=0;
-    if (ui->checkBox_69->isChecked() == true)
+    if (ui->checkBox_69->isChecked() == true){
         recData2->pei2_3f=1;
+        inData7 = inData7 | 0x10;
+    }
     else
         recData2->pei2_3f=0;
-    if (ui->checkBox_70->isChecked() == true)
+    if (ui->checkBox_70->isChecked() == true){
         recData2->pei1_3f=1;
+        inData7 = inData7 | 0x08;
+    }
     else
         recData2->pei1_3f=0;
-    if (ui->checkBox_71->isChecked() == true)
+    if (ui->checkBox_71->isChecked() == true){
         recData2->pemp3f=1;
+        inData7 = inData7 | 0x04;
+    }
     else
         recData2->pemp3f=0;
-    if (ui->checkBox_72->isChecked() == true)
+    if (ui->checkBox_72->isChecked() == true){
         recData2->cop3f=1;
+        inData7 = inData7 | 0x02;
+    }
     else
         recData2->cop3f=0;
-    if (ui->checkBox_73->isChecked() == true)
+    if (ui->checkBox_73->isChecked() == true){
         recData2->avc3f=1;
+        inData7 = inData7 | 0x01;
+    }
     else
         recData2->avc3f=0;
 
-    if (ui->checkBox_74->isChecked() == true)
+    SDDATA[11] = inData7;
+
+    if (ui->checkBox_74->isChecked() == true){
         recData2->esw2_3f=1;
+        inData8 = inData8 | 0x80;
+    }
     else
         recData2->esw2_3f=0;
-    if (ui->checkBox_75->isChecked() == true)
+    if (ui->checkBox_75->isChecked() == true){
         recData2->esw1_3f=1;
+        inData8 = inData8 | 0x40;
+    }
     else
         recData2->esw1_3f=0;
-    if (ui->checkBox_76->isChecked() == true)
+    if (ui->checkBox_76->isChecked() == true){
         recData2->lcd4_3f=1;
+        inData8 = inData8 | 0x20;
+    }
     else
         recData2->lcd4_3f=0;
-    if (ui->checkBox_77->isChecked() == true)
+    if (ui->checkBox_77->isChecked() == true){
         recData2->lcd3_3f=1;
+        inData8 = inData8 | 0x10;
+    }
     else
         recData2->lcd3_3f=0;
-    if (ui->checkBox_78->isChecked() == true)
+    if (ui->checkBox_78->isChecked() == true){
         recData2->lcd2_3f=1;
+        inData8 = inData8 | 0x08;
+    }
     else
         recData2->lcd2_3f=0;
-    if (ui->checkBox_79->isChecked() == true)
+    if (ui->checkBox_79->isChecked() == true){
         recData2->lcd1_3f=1;
+        inData8 = inData8 | 0x04;
+    }
     else
         recData2->lcd1_3f=0;
-    if (ui->checkBox_80->isChecked() == true)
+    if (ui->checkBox_80->isChecked() == true){
         recData2->led2_3f=1;
+        inData8 = inData8 | 0x02;
+    }
     else
         recData2->led2_3f=0;
-    if (ui->checkBox_81->isChecked() == true)
+    if (ui->checkBox_81->isChecked() == true){
         recData2->led1_3f=1;
+        inData8 = inData8 | 0x01;
+    }
     else
         recData2->led1_3f=0;
 
-    if (ui->checkBox_82->isChecked() == true)
+    SDDATA[12] = inData8;
+
+    if (ui->checkBox_82->isChecked() == true){
         recData2->pei2_3c=1;
+        inData9 = inData9 | 0x20;
+    }
     else
         recData2->pei2_3c=0;
-    if (ui->checkBox_83->isChecked() == true)
+    if (ui->checkBox_83->isChecked() == true){
         recData2->pei1_3c=1;
+        inData9 = inData9 | 0x10;
+    }
     else
         recData2->pei1_3c=0;
-    if (ui->checkBox_84->isChecked() == true)
+    if (ui->checkBox_84->isChecked() == true){
         recData2->pei2_2c=1;
+        inData9 = inData9 | 0x08;
+    }
     else
         recData2->pei2_2c=0;
-    if (ui->checkBox_85->isChecked() == true)
+    if (ui->checkBox_85->isChecked() == true){
         recData2->pei1_2c=1;
+        inData9 = inData9 | 0x04;
+    }
     else
         recData2->pei1_2c=0;
-    if (ui->checkBox_86->isChecked() == true)
+    if (ui->checkBox_86->isChecked() == true){
         recData2->pei2_1c=1;
+        inData9 = inData9 | 0x02;
+    }
     else
         recData2->pei2_1c=0;
-    if (ui->checkBox_87->isChecked() == true)
+    if (ui->checkBox_87->isChecked() == true){
         recData2->pei1_1c=1;
+        inData9 = inData9 | 0x01;
+    }
     else
         recData2->pei1_1c=0;
 
-    if (ui->checkBox_88->isChecked() == true)
+    SDDATA[15] = inData9;
+
+    if (ui->checkBox_88->isChecked() == true){
         recData2->pei2_3t=1;
+        inData10 += 0x20;
+        qDebug() << inData10 << "값을 알려줘";
+    }
     else
         recData2->pei2_3t=0;
-    if (ui->checkBox_89->isChecked() == true)
+    if (ui->checkBox_89->isChecked() == true){
         recData2->pei1_3t=1;
+        inData10 = inData10 | 0x10;
+    }
     else
         recData2->pei1_3t=0;
-    if (ui->checkBox_90->isChecked() == true)
+    if (ui->checkBox_90->isChecked() == true){
         recData2->pei2_2t=1;
+        inData10 = inData10 | 0x08;
+    }
     else
         recData2->pei2_2t=0;
-    if (ui->checkBox_91->isChecked() == true)
+    if (ui->checkBox_91->isChecked() == true){
         recData2->pei1_2t=1;
+        inData10 = inData10 | 0x04;
+    }
     else
         recData2->pei1_2t=0;
-    if (ui->checkBox_92->isChecked() == true)
+    if (ui->checkBox_92->isChecked() == true){
         recData2->pei2_1t=1;
+        inData10 = inData10 | 0x02;
+    }
     else
         recData2->pei2_1t=0;
-    if (ui->checkBox_93->isChecked() == true)
+    if (ui->checkBox_93->isChecked() == true){
         recData2->pei1_1t=1;
+        inData10 = inData10 | 0x01;
+    }
     else
         recData2->pei1_1t=0;
 
+    SDDATA[16] = inData10;
+    qDebug() << SDDATA[16] << "완성값확인";
+
     //ui->spinBox_29->setValue(recData.toAddress);
     recData2->VUD = ui->spinBox_29->value();
+    SDDATA[19] = ui->spinBox_29->value();
     recData2->VDD = ui->spinBox_30->value();
-
+    SDDATA[20] = ui->spinBox_30->value();
     recData2->etx = 0x03;
+    SDDATA[21] = 0x03;
 
-    recData2->bcc1=ui->spinBox_32->value();;
-    recData2->bcc2=ui->spinBox_33->value();;
-
+    if(ui->spinBox_32->value() > 0x00){
+        recData2->bcc1=ui->spinBox_32->value();
+        recData2->bcc2=ui->spinBox_33->value();
+    }
     //recData2->sp_Bit1=0;
     //recData2->sp_Bit2=0;
     recData2->sp_Bit3=0;
@@ -1211,6 +1410,23 @@ void MainWindow::on_pushButton_2_clicked()
     recData2->sp_byte4=0;
     recData2->sp_byte5=0;
 
+
+    for(int z=1; z<=21; z++)
+    {
+        if(z%2==0){
+            qDebug() << "z=" << z;
+            bcc1 = bcc1^SDDATA[z];
+        }
+        else{
+            qDebug() << "z2=" << z;
+            bcc2 = bcc2^SDDATA[z];
+            }
+    }
+    recData2->bcc1 = bcc1;
+    recData2->bcc2 = bcc2;
+    SDDATA[22] = bcc1;
+    SDDATA[23] = bcc2;
+    qDebug() << SDDATA[16] << "완성값확인2";
     auto send = reinterpret_cast<char *>(recData2);
     serial->write(send,sizeof(SD));
     QByteArray byteArray(send,sizeof(SD)); // 용도가?
@@ -1229,6 +1445,8 @@ void MainWindow::on_PUSH_2_clicked()
 void MainWindow::on_PUSH_3_clicked()
 {
     //SDR *onedata = new SDR;
+    unsigned char SDRDATA[27];
+    SDR *sendData2 = new SDR;
     unsigned char inData2 = 0x00;
     unsigned char inData3 = 0x00;
     unsigned char inData4 = 0x00;
@@ -1319,14 +1537,14 @@ void MainWindow::on_PUSH_3_clicked()
     else
         SDRDATA[19] = sendData2->sp_bit0;
 
-    int countdata = ui->comboBox->count();//운전모드
+    int countdata = ui->comboBox->currentIndex();//운전모드
     if (countdata == 0){sendData2->drive_DM=1;
                 inData2 += 0x80;}
     else if (countdata == 1)   {sendData2->drive_AM=1;
                 inData2 += 0x40;}
     else if (countdata == 2)   {sendData2->drive_MM=1;
                 inData2 += 0x20;}
-    else if (countdata == 1)   {sendData2->drive_EM=1;
+    else if (countdata == 3)   {sendData2->drive_EM=1;
                 inData2 += 0x10;}
 
     if (ui->checkBox1->isChecked() == true){ // 구원운전 스위치
@@ -1368,6 +1586,7 @@ void MainWindow::on_PUSH_3_clicked()
     if (ui->checkBox_8->isChecked() == true){ // 전체 출입문 닫힘
         sendData2->dir=1;
         inData3 += 0x10;
+        qDebug() << inData3 << "보낸값확인";
     }
     if (ui->checkBox_9->isChecked() == true){ // 3호차 2위 열림 계전기
         sendData2->dor2_3=1;
@@ -1387,6 +1606,7 @@ void MainWindow::on_PUSH_3_clicked()
     }
     SDRDATA[21] = inData3;
 
+    qDebug() << SDRDATA[21] << "최종확인";
     //spinBox_24
     sendData2->sp_bit1 = ui->spinBox_24->value();
     inData4 += ui->spinBox_24->value();
@@ -1441,13 +1661,17 @@ void MainWindow::on_PUSH_3_clicked()
             }
     }
 
-    SDRDATA[25] = bcc1;
-    sendData2->bcc1 = bcc1;
-    SDRDATA[26] = bcc2; //BCC2
-    sendData2->bcc2 = bcc2;
+    SDRDATA[25] = bcc2;
+    sendData2->bcc1 = bcc2;
+    SDRDATA[26] = bcc1; //BCC2
+    sendData2->bcc2 = bcc1;
 
-    auto send = reinterpret_cast<char *>(sendData2);
+
+    auto send = reinterpret_cast<char *>(SDRDATA);
+    //serial->write(send,sizeof(SDR));
+
     serial->write(send,sizeof(SDR));
+
     QByteArray byteArray(send,sizeof(SDR)); // 용도가?
     qDebug() << "write" << byteArray.toHex();
     for(int i=0; i<=26; i++)

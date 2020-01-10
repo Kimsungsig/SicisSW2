@@ -65,9 +65,9 @@ typedef struct SDR{
     uchar dor1_1:1;          /*Door Open Relay1 of Car 1*/
 
     uchar sp_bit1:5;         /* Spare bit 1 */
-    uchar dcw;               /*Door closw Warning*/
-    uchar dow2;              /*Door Open Warning2*/
-    uchar dow1;              /*Door Open Warning1*/
+    uchar dcw:1;               /*Door closw Warning*/
+    uchar dow2:1;              /*Door Open Warning2*/
+    uchar dow1:1;              /*Door Open Warning1*/
 
     uchar lifeCnt;           /*Life counter*/
     uchar etx;               /*end data = 0x03*/
