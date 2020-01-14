@@ -46,7 +46,7 @@ QString getStringFromUnsignedChar( unsigned char str ){
     return result;
 }
 
-void delay(int sec)
+void delay(double sec)
 {
     QTime dieTime= QTime::currentTime().addSecs(sec);
     while (QTime::currentTime() < dieTime)
@@ -115,70 +115,130 @@ void MainWindow::widget_changed()
 }
 void MainWindow::serial_received()
 {
-    //SD recData;
-    //SD *recData = new SD;
     unsigned char bcc1 = 0x00;
     unsigned char bcc2 = 0x00;
 
-    //memset(recData,0,sizeof(SD));
+    //if(readDataCheck==27)
+        //memset(Inhex,0,27);
 
-    if(readDataCheck>0 && readDataCheck<24) // 현제는 일반데이터 값 30이니까. 이후에 필요시 변경.
+    if (ui->checkBox_97->isChecked() == true)
     {
-        this->ui->textEdit_3->clear(); // 일단 지우고
-        qDebug() << "one more read data ↓";
-        QByteArray read_Data2;
-        read_Data2 = serial->readAll();
-        qDebug() << read_Data2.size();
-        int resize = 24-readDataCheck;
-        unsigned char* hex2 = new unsigned char[resize];
-        memcpy(hex2, read_Data2.constData(), resize);
-        //memcpy(recData, read_Data2.constData(),sizeof(SD));
-        for(int i=0; i<resize; i++){
-            Inhex[i+readDataCheck] = hex2[i];
-        }
-//        this->ui->textEdit_10->clear();
-//        this->ui->textEdit_11->clear();
-//        for(int i=0; i<resize; i++){
-//            this->ui->textEdit_10->insertHtml(getStringFromUnsignedChar(hex2[i]));
-//        }
-//        for(int i=0; i<30; i++){
-//            this->ui->textEdit_11->insertHtml(getStringFromUnsignedChar(Inhex[i]));
-//        }
+        if(readDataCheck>0 && readDataCheck<27) // 현제는 일반데이터 값 30이니까. 이후에 필요시 변경.
+        {
+            this->ui->textEdit_3->clear(); // 일단 지우고
+            qDebug() << "one more read data ↓";
+            QByteArray read_Data2;
+            read_Data2 = serial->readAll();
+            qDebug() << read_Data2.size();
+            int resize = 27-readDataCheck;
+            unsigned char* hex2 = new unsigned char[resize];
+            memcpy(hex2, read_Data2.constData(), resize);
+            //memcpy(recData, read_Data2.constData(),sizeof(SD));
+            for(int i=0; i<resize; i++){
+                Inhex[i+readDataCheck] = hex2[i];
+            }
 
-        readDataCheck = 24; // 이건 다시읽어온 값인데.필요시 바꿔준다.
+            readDataCheck = 27; // 이건 다시읽어온 값인데.필요시 바꿔준다.
+        }
+        else
+        {
+            //memset(recData,0,sizeof(SD));
+            this->ui->textEdit_3->clear();
+            QByteArray read_Data;
+            read_Data = serial->readAll();
+            //this->ui->textEdit_9->clear();
+            //this->ui->textEdit_9->insertHtml(read_Data.toHex());
+            readDataCheck = read_Data.size();
+            memcpy(Inhex, read_Data.constData(), read_Data.size());
+            //memcpy(recData, read_Data.constData(),sizeof(SD));
+            qDebug() << "Read data ↓";
+            qDebug() << read_Data.size();
+        }
+        if(readDataCheck==27)
+        {
+            this->ui->textEdit_2->clear();
+
+            for(int i=0; i<27; i++){
+                this->ui->textEdit_2->insertHtml(getStringFromUnsignedChar(Inhex[i]));
+            }
+
+            bcc1 = 0x00;
+            bcc2 = 0x00;
+            for(int z=1; z<=24; z++)
+            {
+                if(z%2==0){
+                    bcc1 = bcc1^Inhex[z];
+                }
+                else{
+                    bcc2 = bcc2^Inhex[z];
+                    }
+            }
+
+            if (bcc2 != Inhex[25]){
+                qDebug() << "Not bcc1 samsam";
+                qDebug() << Inhex[25];
+                qDebug() << bcc2;
+            }
+            if (bcc1 != Inhex[26]){
+                qDebug() << "Not bcc2 samsam";
+                qDebug() << Inhex[26];
+                qDebug() << bcc1;
+            }
+            //delay(0.1);
+            on_pushButton_2_clicked();
+        }
     }
     else
     {
-        //memset(recData,0,sizeof(SD));
-        this->ui->textEdit_3->clear();
-        QByteArray read_Data;
-        read_Data = serial->readAll();
-        //this->ui->textEdit_9->clear();
-        //this->ui->textEdit_9->insertHtml(read_Data.toHex());
-        readDataCheck = read_Data.size();
-        memcpy(Inhex, read_Data.constData(), read_Data.size());
-        //memcpy(recData, read_Data.constData(),sizeof(SD));
-        qDebug() << "Read data ↓";
-        qDebug() << read_Data.size();
-//        qDebug() << Inhex;
-//        qDebug() << recData;
-    }
-
-    for(int i=0; i<24; i++){
-        this->ui->textEdit_3->insertHtml(getStringFromUnsignedChar(Inhex[i]));
-    }
-
-    bcc1 = 0x00;
-    bcc2 = 0x00;
-    for(int z=1; z<=21; z++)
-    {
-        if(z%2==0){
-            bcc1 = bcc1^Inhex[z];
-        }
-        else{
-            bcc2 = bcc2^Inhex[z];
+        if(readDataCheck>0 && readDataCheck<24) // 현제는 일반데이터 값 30이니까. 이후에 필요시 변경.
+        {
+            this->ui->textEdit_3->clear(); // 일단 지우고
+            qDebug() << "one more read data ↓";
+            QByteArray read_Data2;
+            read_Data2 = serial->readAll();
+            qDebug() << read_Data2.size();
+            int resize = 24-readDataCheck;
+            unsigned char* hex2 = new unsigned char[resize];
+            memcpy(hex2, read_Data2.constData(), resize);
+            //memcpy(recData, read_Data2.constData(),sizeof(SD));
+            for(int i=0; i<resize; i++){
+                Inhex[i+readDataCheck] = hex2[i];
             }
-    }
+
+            readDataCheck = 24; // 이건 다시읽어온 값인데.필요시 바꿔준다.
+        }
+        else
+        {
+            //memset(recData,0,sizeof(SD));
+            this->ui->textEdit_3->clear();
+            QByteArray read_Data;
+            read_Data = serial->readAll();
+            //this->ui->textEdit_9->clear();
+            //this->ui->textEdit_9->insertHtml(read_Data.toHex());
+            readDataCheck = read_Data.size();
+            memcpy(Inhex, read_Data.constData(), read_Data.size());
+            //memcpy(recData, read_Data.constData(),sizeof(SD));
+            qDebug() << "Read data ↓";
+            qDebug() << read_Data.size();
+            qDebug() << Inhex;
+            //qDebug() << recData;
+        }
+
+        for(int i=0; i<24; i++){
+            this->ui->textEdit_3->insertHtml(getStringFromUnsignedChar(Inhex[i]));
+        }
+
+        bcc1 = 0x00;
+        bcc2 = 0x00;
+        for(int z=1; z<=21; z++)
+        {
+            if(z%2==0){
+                bcc1 = bcc1^Inhex[z];
+            }
+            else{
+                bcc2 = bcc2^Inhex[z];
+                }
+        }
 
         if (bcc2 != Inhex[22]){
             qDebug() << "Not bcc1 samsam";
@@ -190,315 +250,307 @@ void MainWindow::serial_received()
             qDebug() << Inhex[23];
             qDebug() << bcc1;
         }
+    }
 
-        if (Inhex[0] == 0x02)
-            {
-                ui->spinBox_20->setValue(Inhex[1]);
-                ui->spinBox_21->setValue(Inhex[2]);
-                ui->spinBox_22->setValue(Inhex[3]);
-                if(	Inhex[4] & 0x04)
-                    ui->checkBox_30->setChecked(true);
-                else
-                    ui->checkBox_30->setChecked(false);
-                if(Inhex[4] & 0x02)
-                    ui->checkBox_31->setChecked(true);
-                else
-                    ui->checkBox_31->setChecked(false);
-                if(Inhex[4] & 0x01)
-                    ui->checkBox_32->setChecked(true);
-                else
-                    ui->checkBox_32->setChecked(false);
+        if (Inhex[0] == 0x02 && ui->checkBox_97->isChecked() == false)
+        {
+            ui->spinBox_20->setValue(Inhex[1]);
+            ui->spinBox_21->setValue(Inhex[2]);
+            ui->spinBox_22->setValue(Inhex[3]);
+            if(	Inhex[4] & 0x04)
+                ui->checkBox_30->setChecked(true);
+            else
+                ui->checkBox_30->setChecked(false);
+            if(Inhex[4] & 0x02)
+                ui->checkBox_31->setChecked(true);
+            else
+                ui->checkBox_31->setChecked(false);
+            if(Inhex[4] & 0x01)
+                ui->checkBox_32->setChecked(true);
+            else
+                ui->checkBox_32->setChecked(false);
 
-                if(Inhex[5] & 0x10)
-                    ui->checkBox_33->setChecked(true);
-                else
-                    ui->checkBox_33->setChecked(false);
-                if(Inhex[5] & 0x08)
-                    ui->checkBox_34->setChecked(true);
-                else
-                    ui->checkBox_34->setChecked(false);
-                if(Inhex[5] & 0x04)
-                    ui->checkBox_35->setChecked(true);
-                else
-                    ui->checkBox_35->setChecked(false);
-                if(Inhex[5] & 0x02)
-                    ui->checkBox_36->setChecked(true);
-                else
-                    ui->checkBox_36->setChecked(false);
-                if(Inhex[5] & 0x01)
-                    ui->checkBox_96->setChecked(true);
-                else
-                    ui->checkBox_96->setChecked(false);
+            if(Inhex[5] & 0x10)
+                ui->checkBox_33->setChecked(true);
+            else
+                ui->checkBox_33->setChecked(false);
+            if(Inhex[5] & 0x08)
+                ui->checkBox_34->setChecked(true);
+            else
+                ui->checkBox_34->setChecked(false);
+            if(Inhex[5] & 0x04)
+                ui->checkBox_35->setChecked(true);
+            else
+                ui->checkBox_35->setChecked(false);
+            if(Inhex[5] & 0x02)
+                ui->checkBox_36->setChecked(true);
+            else
+                ui->checkBox_36->setChecked(false);
+            if(Inhex[5] & 0x01)
+                ui->checkBox_96->setChecked(true);
+            else
+                ui->checkBox_96->setChecked(false);
 
-                ui->spinBox_31->setValue(Inhex[6]);
+            ui->spinBox_31->setValue(Inhex[6]);
 
-                if(Inhex[7] & 0x80)
-                    ui->checkBox_37->setChecked(true);
-                else
-                    ui->checkBox_37->setChecked(false);
-                if(Inhex[7] & 0x40)
-                    ui->checkBox_38->setChecked(true);
-                else
-                    ui->checkBox_38->setChecked(false);
-                if(Inhex[7] & 0x20)
-                    ui->checkBox_39->setChecked(true);
-                else
-                    ui->checkBox_39->setChecked(false);
-                if(Inhex[7] & 0x10)
-                    ui->checkBox_40->setChecked(true);
-                else
-                    ui->checkBox_40->setChecked(false);
-                if(Inhex[7] & 0x08)
-                    ui->checkBox_41->setChecked(true);
-                else
-                    ui->checkBox_41->setChecked(false);
-                if(Inhex[7] & 0x04)
-                    ui->checkBox_42->setChecked(true);
-                else
-                    ui->checkBox_42->setChecked(false);
-                if(Inhex[7] & 0x02)
-                    ui->checkBox_43->setChecked(true);
-                else
-                    ui->checkBox_43->setChecked(false);
-                if(Inhex[7] & 0x01)
-                    ui->checkBox_44->setChecked(true);
-                else
-                    ui->checkBox_44->setChecked(false);
+            if(Inhex[7] & 0x80)
+                ui->checkBox_37->setChecked(true);
+            else
+                ui->checkBox_37->setChecked(false);
+            if(Inhex[7] & 0x40)
+                ui->checkBox_38->setChecked(true);
+            else
+                ui->checkBox_38->setChecked(false);
+            if(Inhex[7] & 0x20)
+                ui->checkBox_39->setChecked(true);
+            else
+                ui->checkBox_39->setChecked(false);
+            if(Inhex[7] & 0x10)
+                ui->checkBox_40->setChecked(true);
+            else
+                ui->checkBox_40->setChecked(false);
+            if(Inhex[7] & 0x08)
+                ui->checkBox_41->setChecked(true);
+            else
+                ui->checkBox_41->setChecked(false);
+            if(Inhex[7] & 0x04)
+                ui->checkBox_42->setChecked(true);
+            else
+                ui->checkBox_42->setChecked(false);
+            if(Inhex[7] & 0x02)
+                ui->checkBox_43->setChecked(true);
+            else
+                ui->checkBox_43->setChecked(false);
+            if(Inhex[7] & 0x01)
+                ui->checkBox_44->setChecked(true);
+            else
+                ui->checkBox_44->setChecked(false);
 
-                if(Inhex[8] & 0x80)
-                    ui->checkBox_45->setChecked(true);
-                else
-                    ui->checkBox_45->setChecked(false);
-                if(Inhex[8] & 0x40)
-                    ui->checkBox_46->setChecked(true);
-                else
-                    ui->checkBox_46->setChecked(false);
-                if(Inhex[8] & 0x20)
-                    ui->checkBox_47->setChecked(true);
-                else
-                    ui->checkBox_47->setChecked(false);
-                if(Inhex[8] & 0x10)
-                    ui->checkBox_48->setChecked(true);
-                else
-                    ui->checkBox_48->setChecked(false);
-                if(Inhex[8] & 0x08)
-                    ui->checkBox_49->setChecked(true);
-                else
-                    ui->checkBox_49->setChecked(false);
-                if(Inhex[8] & 0x04)
-                    ui->checkBox_50->setChecked(true);
-                else
-                    ui->checkBox_50->setChecked(false);
-                if(Inhex[8] & 0x02)
-                    ui->checkBox_51->setChecked(true);
-                else
-                    ui->checkBox_51->setChecked(false);
-                if(Inhex[8] & 0x01)
-                    ui->checkBox_52->setChecked(true);
-                else
-                    ui->checkBox_52->setChecked(false);
+            if(Inhex[8] & 0x80)
+                ui->checkBox_45->setChecked(true);
+            else
+                ui->checkBox_45->setChecked(false);
+            if(Inhex[8] & 0x40)
+                ui->checkBox_46->setChecked(true);
+            else
+                ui->checkBox_46->setChecked(false);
+            if(Inhex[8] & 0x20)
+                ui->checkBox_47->setChecked(true);
+            else
+                ui->checkBox_47->setChecked(false);
+            if(Inhex[8] & 0x10)
+                ui->checkBox_48->setChecked(true);
+            else
+                ui->checkBox_48->setChecked(false);
+            if(Inhex[8] & 0x08)
+                ui->checkBox_49->setChecked(true);
+            else
+                ui->checkBox_49->setChecked(false);
+            if(Inhex[8] & 0x04)
+                ui->checkBox_50->setChecked(true);
+            else
+                ui->checkBox_50->setChecked(false);
+            if(Inhex[8] & 0x02)
+                ui->checkBox_51->setChecked(true);
+            else
+                ui->checkBox_51->setChecked(false);
+            if(Inhex[8] & 0x01)
+                ui->checkBox_52->setChecked(true);
+            else
+                ui->checkBox_52->setChecked(false);
 
-                if(Inhex[9] & 0x80)
-                    ui->checkBox_25->setChecked(true);
-                else
-                    ui->checkBox_25->setChecked(false);
-                if(Inhex[9] & 0x40)
-                    ui->checkBox_53->setChecked(true);
-                else
-                    ui->checkBox_53->setChecked(false);
-                if(Inhex[9] & 0x20)
-                    ui->checkBox_54->setChecked(true);
-                else
-                    ui->checkBox_54->setChecked(false);
-                if(Inhex[9] & 0x10)
-                    ui->checkBox_55->setChecked(true);
-                else
-                    ui->checkBox_55->setChecked(false);
-                if(Inhex[9] & 0x08)
-                    ui->checkBox_56->setChecked(true);
-                else
-                    ui->checkBox_56->setChecked(false);
-                if(Inhex[9] & 0x04)
-                    ui->checkBox_57->setChecked(true);
-                else
-                    ui->checkBox_57->setChecked(false);
+            if(Inhex[9] & 0x80)
+                ui->checkBox_25->setChecked(true);
+            else
+                ui->checkBox_25->setChecked(false);
+            if(Inhex[9] & 0x40)
+                ui->checkBox_53->setChecked(true);
+            else
+                ui->checkBox_53->setChecked(false);
+            if(Inhex[9] & 0x20)
+                ui->checkBox_54->setChecked(true);
+            else
+                ui->checkBox_54->setChecked(false);
+            if(Inhex[9] & 0x10)
+                ui->checkBox_55->setChecked(true);
+            else
+                ui->checkBox_55->setChecked(false);
+            if(Inhex[9] & 0x08)
+                ui->checkBox_56->setChecked(true);
+            else
+                ui->checkBox_56->setChecked(false);
+            if(Inhex[9] & 0x04)
+                ui->checkBox_57->setChecked(true);
+            else
+                ui->checkBox_57->setChecked(false);
 
 //recData->esw2_2f==1
-                if(Inhex[10] & 0x80)
-                    ui->checkBox_58->setChecked(true);
-                else
-                    ui->checkBox_58->setChecked(false);
-                if(Inhex[10] & 0x40)
-                    ui->checkBox_59->setChecked(true);
-                else
-                    ui->checkBox_59->setChecked(false);
-                if(Inhex[10] & 0x20)
-                    ui->checkBox_60->setChecked(true);
-                else
-                    ui->checkBox_60->setChecked(false);
-                if(Inhex[10] & 0x10)
-                    ui->checkBox_61->setChecked(true);
-                else
-                    ui->checkBox_61->setChecked(false);
-                if(Inhex[10] & 0x08)
-                    ui->checkBox_62->setChecked(true);
-                else
-                    ui->checkBox_62->setChecked(false);
-                if(Inhex[10] & 0x04)
-                    ui->checkBox_63->setChecked(true);
-                else
-                    ui->checkBox_63->setChecked(false);
-                if(Inhex[10] & 0x02)
-                    ui->checkBox_64->setChecked(true);
-                else
-                    ui->checkBox_64->setChecked(false);
-                if(Inhex[10] & 0x01)
-                    ui->checkBox_65->setChecked(true);
-                else
-                    ui->checkBox_65->setChecked(false);
+            if(Inhex[10] & 0x80)
+                ui->checkBox_58->setChecked(true);
+            else
+                ui->checkBox_58->setChecked(false);
+            if(Inhex[10] & 0x40)
+                ui->checkBox_59->setChecked(true);
+            else
+                ui->checkBox_59->setChecked(false);
+            if(Inhex[10] & 0x20)
+                ui->checkBox_60->setChecked(true);
+            else
+                ui->checkBox_60->setChecked(false);
+            if(Inhex[10] & 0x10)
+                ui->checkBox_61->setChecked(true);
+            else
+                ui->checkBox_61->setChecked(false);
+            if(Inhex[10] & 0x08)
+                ui->checkBox_62->setChecked(true);
+            else
+                ui->checkBox_62->setChecked(false);
+            if(Inhex[10] & 0x04)
+                ui->checkBox_63->setChecked(true);
+            else
+                ui->checkBox_63->setChecked(false);
+            if(Inhex[10] & 0x02)
+                ui->checkBox_64->setChecked(true);
+            else
+                ui->checkBox_64->setChecked(false);
+            if(Inhex[10] & 0x01)
+                ui->checkBox_65->setChecked(true);
+            else
+                ui->checkBox_65->setChecked(false);
 
-                if(Inhex[11] & 0x80)
-                    ui->checkBox_66->setChecked(true);
-                else
-                    ui->checkBox_66->setChecked(false);
-                if(Inhex[11] & 0x40)
-                    ui->checkBox_67->setChecked(true);
-                else
-                    ui->checkBox_67->setChecked(false);
-                if(Inhex[11] & 0x20)
-                    ui->checkBox_68->setChecked(true);
-                else
-                    ui->checkBox_68->setChecked(false);
-                if(Inhex[11] & 0x10)
-                    ui->checkBox_69->setChecked(true);
-                else
-                    ui->checkBox_69->setChecked(false);
-                if(Inhex[11] & 0x08)
-                    ui->checkBox_70->setChecked(true);
-                else
-                    ui->checkBox_70->setChecked(false);
-                if(Inhex[11] & 0x04)
-                    ui->checkBox_71->setChecked(true);
-                else
-                    ui->checkBox_71->setChecked(false);
-                if(Inhex[11] & 0x02)
-                    ui->checkBox_72->setChecked(true);
-                else
-                    ui->checkBox_72->setChecked(false);
-                if(Inhex[11] & 0x01)
-                    ui->checkBox_73->setChecked(true);
-                else
-                    ui->checkBox_73->setChecked(false);
+            if(Inhex[11] & 0x80)
+                ui->checkBox_66->setChecked(true);
+            else
+                ui->checkBox_66->setChecked(false);
+            if(Inhex[11] & 0x40)
+                ui->checkBox_67->setChecked(true);
+            else
+                ui->checkBox_67->setChecked(false);
+            if(Inhex[11] & 0x20)
+                ui->checkBox_68->setChecked(true);
+            else
+                ui->checkBox_68->setChecked(false);
+            if(Inhex[11] & 0x10)
+                ui->checkBox_69->setChecked(true);
+            else
+                ui->checkBox_69->setChecked(false);
+            if(Inhex[11] & 0x08)
+                ui->checkBox_70->setChecked(true);
+            else
+                ui->checkBox_70->setChecked(false);
+            if(Inhex[11] & 0x04)
+                ui->checkBox_71->setChecked(true);
+            else
+                ui->checkBox_71->setChecked(false);
+            if(Inhex[11] & 0x02)
+                ui->checkBox_72->setChecked(true);
+            else
+                ui->checkBox_72->setChecked(false);
+            if(Inhex[11] & 0x01)
+                ui->checkBox_73->setChecked(true);
+            else
+                ui->checkBox_73->setChecked(false);
 
-                if(Inhex[12] & 0x80)
-                    ui->checkBox_74->setChecked(true);
-                else
-                    ui->checkBox_74->setChecked(false);
-                if(Inhex[12] & 0x40)
-                    ui->checkBox_75->setChecked(true);
-                else
-                    ui->checkBox_75->setChecked(false);
-                if(Inhex[12] & 0x20)
-                    ui->checkBox_76->setChecked(true);
-                else
-                    ui->checkBox_76->setChecked(false);
-                if(Inhex[12] & 0x10)
-                    ui->checkBox_77->setChecked(true);
-                else
-                    ui->checkBox_77->setChecked(false);
-                if(Inhex[12] & 0x08)
-                    ui->checkBox_78->setChecked(true);
-                else
-                    ui->checkBox_78->setChecked(false);
-                if(Inhex[12] & 0x04)
-                    ui->checkBox_79->setChecked(true);
-                else
-                    ui->checkBox_79->setChecked(false);
-                if(Inhex[12] & 0x02)
-                    ui->checkBox_80->setChecked(true);
-                else
-                    ui->checkBox_80->setChecked(false);
-                if(Inhex[12] & 0x01)
-                    ui->checkBox_81->setChecked(true);
-                else
-                    ui->checkBox_81->setChecked(false);
+            if(Inhex[12] & 0x80)
+                ui->checkBox_74->setChecked(true);
+            else
+                ui->checkBox_74->setChecked(false);
+            if(Inhex[12] & 0x40)
+                ui->checkBox_75->setChecked(true);
+            else
+                ui->checkBox_75->setChecked(false);
+            if(Inhex[12] & 0x20)
+                ui->checkBox_76->setChecked(true);
+            else
+                ui->checkBox_76->setChecked(false);
+            if(Inhex[12] & 0x10)
+                ui->checkBox_77->setChecked(true);
+            else
+                ui->checkBox_77->setChecked(false);
+            if(Inhex[12] & 0x08)
+                ui->checkBox_78->setChecked(true);
+            else
+                ui->checkBox_78->setChecked(false);
+            if(Inhex[12] & 0x04)
+                ui->checkBox_79->setChecked(true);
+            else
+                ui->checkBox_79->setChecked(false);
+            if(Inhex[12] & 0x02)
+                ui->checkBox_80->setChecked(true);
+            else
+                ui->checkBox_80->setChecked(false);
+            if(Inhex[12] & 0x01)
+                ui->checkBox_81->setChecked(true);
+            else
+                ui->checkBox_81->setChecked(false);
 
-                ui->spinBox_25->setValue(Inhex[13]);
-                ui->spinBox_26->setValue(Inhex[14]);
+            ui->spinBox_25->setValue(Inhex[13]);
+            ui->spinBox_26->setValue(Inhex[14]);
 
-                if(Inhex[15] & 0x20)
-                    ui->checkBox_82->setChecked(true);
-                else
-                    ui->checkBox_82->setChecked(false);
-                if(Inhex[15] & 0x10)
-                    ui->checkBox_83->setChecked(true);
-                else
-                    ui->checkBox_83->setChecked(false);
-                if(Inhex[15] & 0x08)
-                    ui->checkBox_84->setChecked(true);
-                else
-                    ui->checkBox_84->setChecked(false);
-                if(Inhex[15] & 0x04)
-                    ui->checkBox_85->setChecked(true);
-                else
-                    ui->checkBox_85->setChecked(false);
-                if(Inhex[15] & 0x02)
-                    ui->checkBox_86->setChecked(true);
-                else
-                    ui->checkBox_86->setChecked(false);
-                if(Inhex[15] & 0x01)
-                    ui->checkBox_87->setChecked(true);
-                else
-                    ui->checkBox_87->setChecked(false);
+            if(Inhex[15] & 0x20)
+                ui->checkBox_82->setChecked(true);
+            else
+                ui->checkBox_82->setChecked(false);
+            if(Inhex[15] & 0x10)
+                ui->checkBox_83->setChecked(true);
+            else
+                ui->checkBox_83->setChecked(false);
+            if(Inhex[15] & 0x08)
+                ui->checkBox_84->setChecked(true);
+            else
+                ui->checkBox_84->setChecked(false);
+            if(Inhex[15] & 0x04)
+                ui->checkBox_85->setChecked(true);
+            else
+                ui->checkBox_85->setChecked(false);
+            if(Inhex[15] & 0x02)
+                ui->checkBox_86->setChecked(true);
+            else
+                ui->checkBox_86->setChecked(false);
+            if(Inhex[15] & 0x01)
+                ui->checkBox_87->setChecked(true);
+            else
+                ui->checkBox_87->setChecked(false);
 
-                if(Inhex[16] & 0x20){
-                    ui->checkBox_88->setChecked(true);
-                    qDebug() << "체크했다";
-                    qDebug() << Inhex[16];
-                }
-                else{
-                    ui->checkBox_88->setChecked(false);
-                    qDebug() << "체크안했다";
-                }
-                if(Inhex[16] & 0x10)
-                    ui->checkBox_89->setChecked(true);
-                else
-                    ui->checkBox_89->setChecked(false);
-                if(Inhex[16] & 0x08)
-                    ui->checkBox_90->setChecked(true);
-                else
-                    ui->checkBox_90->setChecked(false);
-                if(Inhex[16] & 0x04){
-                    ui->checkBox_91->setChecked(true);
-                    qDebug() << "체크되는이유 찾자";
-                }
-                else{
-                    ui->checkBox_91->setChecked(false);
-                    qDebug() << "정상동작중";
-                }
-                if(Inhex[16] & 0x02)
-                    ui->checkBox_92->setChecked(true);
-                else
-                    ui->checkBox_92->setChecked(false);
-                if(Inhex[16] & 0x01)
-                    ui->checkBox_93->setChecked(true);
-                else
-                    ui->checkBox_93->setChecked(false);
+            if(Inhex[16] & 0x20){
+                ui->checkBox_88->setChecked(true);
+                qDebug() << Inhex[16];
+            }
+            else{
+                ui->checkBox_88->setChecked(false);
+            }
+            if(Inhex[16] & 0x10)
+                ui->checkBox_89->setChecked(true);
+            else
+                ui->checkBox_89->setChecked(false);
+            if(Inhex[16] & 0x08)
+                ui->checkBox_90->setChecked(true);
+            else
+                ui->checkBox_90->setChecked(false);
+            if(Inhex[16] & 0x04){
+                ui->checkBox_91->setChecked(true);
+            }
+            else{
+                ui->checkBox_91->setChecked(false);
+            }
+            if(Inhex[16] & 0x02)
+                ui->checkBox_92->setChecked(true);
+            else
+                ui->checkBox_92->setChecked(false);
+            if(Inhex[16] & 0x01)
+                ui->checkBox_93->setChecked(true);
+            else
+                ui->checkBox_93->setChecked(false);
 
-        //ui->spinBox_27->setValue(recData.sp_byte4); Inhex[17]
-        //ui->spinBox_28->setValue(recData.sp_byte5); Inhex[18]
+            ui->spinBox_29->setValue(Inhex[19]);
+            ui->spinBox_30->setValue(Inhex[20]);
 
-        ui->spinBox_29->setValue(Inhex[19]);
-        ui->spinBox_30->setValue(Inhex[20]);
-
-
-        ui->spinBox_32->setValue(Inhex[22]);
-        ui->spinBox_33->setValue(Inhex[23]);
-    }
-    else{
-        this->ui->textEdit_3->insertHtml("not data start 02");
-        qDebug() << Inhex[21] << "stx값";
-    }
+            ui->spinBox_32->setValue(Inhex[22]);
+            ui->spinBox_33->setValue(Inhex[23]);
+        }
+        else{
+            this->ui->textEdit_3->insertHtml("SDR MODE");
+        }
 }
 
 void MainWindow::train_set(struct trainMacro traindata)
@@ -924,7 +976,6 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
     SDRDATA[26] = bcc1; //BCC2
     sendData2->bcc2 = bcc1;
 
-    //auto send = reinterpret_cast<char *>(sendData2);
     auto send = reinterpret_cast<char *>(SDRDATA);
 
     serial->write(send,sizeof(SDR));
@@ -940,8 +991,9 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
 
 void MainWindow::on_pushButton_2_clicked()
 {
-    unsigned char SDDATA[24];
+    unsigned char SDDATA[24] = {0,};
     SD *recData2 = new SD;
+    memset(recData2,0,sizeof(SD));
     unsigned char bcc1= 0x00;
     unsigned char bcc2= 0x00;
     unsigned char inData1 = 0x00;
@@ -1013,54 +1065,56 @@ void MainWindow::on_pushButton_2_clicked()
     //recData2->sp_byte;
     if (ui->checkBox_37->isChecked() == true){
         recData2->fcam1f=1;
-        inData3 = inData3 | 0x80;
+        inData3 += 0x80;
     }
     else
         recData2->fcam1f=0;
     if (ui->checkBox_38->isChecked() == true){
         recData2->scam2_1f=1;
-        inData3 = inData3 | 0x40;
+        inData3 +=0x40;
     }
     else
         recData2->scam2_1f=0;
     if (ui->checkBox_39->isChecked() == true){
         recData2->scam1_1f=1;
-        inData3 = inData3 | 0x20;
+        inData3 +=0x20;
     }
     else
         recData2->scam1_1f=0;
     if (ui->checkBox_40->isChecked() == true){
         recData2->pei2_1f=1;
-        inData3 = inData3 | 0x10;
+        inData3 += 0x10;
     }
     else
         recData2->pei2_1f=0;
     if (ui->checkBox_41->isChecked() == true){
         recData2->pei1_1f=1;
-        inData3 = inData3 | 0x08;
+        inData3 += 0x08;
     }
     else
         recData2->pei1_1f=0;
     if (ui->checkBox_42->isChecked() == true){
         recData2->pamp1f=1;
-        inData3 = inData3 | 0x04;
+        inData3 += 0x04;
     }
     else
         recData2->pamp1f=0;
     if (ui->checkBox_43->isChecked() == true){
         recData2->cop1f=1;
-        inData3 = inData3 | 0x02;
+        inData3 += 0x02;
     }
     else
         recData2->cop1f=0;
     if (ui->checkBox_44->isChecked() == true){
         recData2->avc1f=1;
-        inData3 = inData3 | 0x01;
+        inData3 += 0x01;
     }
     else
         recData2->avc1f=0;
 
     SDDATA[7] = inData3;
+    qDebug() << inData3 << "data check";
+    qDebug() << SDDATA[7] << "data check2";
 
     if (ui->checkBox_45->isChecked() == true){
         recData2->esw2_1f=1;
@@ -1377,15 +1431,13 @@ void MainWindow::on_pushButton_2_clicked()
         recData2->pei2_1t=0;
     if (ui->checkBox_93->isChecked() == true){
         recData2->pei1_1t=1;
-        inData10 = inData10 | 0x01;
+        inData10 += 0x01;
     }
     else
         recData2->pei1_1t=0;
 
     SDDATA[16] = inData10;
-    qDebug() << SDDATA[16] << "완성값확인";
 
-    //ui->spinBox_29->setValue(recData.toAddress);
     recData2->VUD = ui->spinBox_29->value();
     SDDATA[19] = ui->spinBox_29->value();
     recData2->VDD = ui->spinBox_30->value();
@@ -1414,26 +1466,28 @@ void MainWindow::on_pushButton_2_clicked()
     for(int z=1; z<=21; z++)
     {
         if(z%2==0){
-            qDebug() << "z=" << z;
             bcc1 = bcc1^SDDATA[z];
         }
         else{
-            qDebug() << "z2=" << z;
             bcc2 = bcc2^SDDATA[z];
             }
     }
+    qDebug() << inData3 << "data check";
+    qDebug() << SDDATA[7] << "data check2";
+
+
     recData2->bcc1 = bcc1;
     recData2->bcc2 = bcc2;
     SDDATA[22] = bcc1;
     SDDATA[23] = bcc2;
-    qDebug() << SDDATA[16] << "완성값확인2";
-    auto send = reinterpret_cast<char *>(recData2);
-    serial->write(send,sizeof(SD));
+    auto send = reinterpret_cast<char *>(SDDATA);
     QByteArray byteArray(send,sizeof(SD)); // 용도가?
     qDebug() << "write" << byteArray.toHex();
+qDebug() << byteArray;
+    serial->write(send,sizeof(SD));
+
     this->ui->textEdit_10->clear();
     this->ui->textEdit_10->insertHtml(byteArray.toHex());
-
 }
 
 void MainWindow::on_PUSH_2_clicked()
@@ -1606,7 +1660,6 @@ void MainWindow::on_PUSH_3_clicked()
     }
     SDRDATA[21] = inData3;
 
-    qDebug() << SDRDATA[21] << "최종확인";
     //spinBox_24
     sendData2->sp_bit1 = ui->spinBox_24->value();
     inData4 += ui->spinBox_24->value();
@@ -1652,11 +1705,9 @@ void MainWindow::on_PUSH_3_clicked()
     for(int z=1; z<=24; z++)
     {
         if(z%2==0){
-            qDebug() << "z=" << z;
             bcc1 = bcc1^SDRDATA[z];
         }
         else{
-            qDebug() << "z2=" << z;
             bcc2 = bcc2^SDRDATA[z];
             }
     }
@@ -1681,6 +1732,3 @@ void MainWindow::on_PUSH_3_clicked()
     this->ui->textEdit_9->clear();
     this->ui->textEdit_9->insertHtml(getStringFromUnsignedChar(SDRDATA[ui->spinBox_34->value()]));
 }
-
-
-
