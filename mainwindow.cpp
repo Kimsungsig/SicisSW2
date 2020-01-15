@@ -11,6 +11,7 @@
 #include <QtGui>
 #include <QTime>
 #include <windows.h>
+#include <Tlhelp32.h>
 
 QString year;
 QString month;
@@ -33,6 +34,12 @@ unsigned char rundist = 0x00;
 
 int pushWhile = 1;
 
+
+void MainWindow::closeEvent(QCloseEvent *e){
+    qDebug() << "서브 윈도우 닫아요!!";
+    pushWhile=0;
+}
+
 QString getStringFromUnsignedChar( unsigned char str ){
     QString result = "";
 
@@ -52,7 +59,6 @@ void delay(double sec)
     while (QTime::currentTime() < dieTime)
         QCoreApplication::processEvents(QEventLoop::AllEvents, 1000);
 }
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -75,6 +81,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    pushWhile=0;
     delete ui;
     serial->close();
 }
@@ -220,7 +227,7 @@ void MainWindow::serial_received()
             //memcpy(recData, read_Data.constData(),sizeof(SD));
             qDebug() << "Read data ↓";
             qDebug() << read_Data.size();
-            qDebug() << Inhex;
+            //qDebug() << Inhex;
             //qDebug() << recData;
         }
 
@@ -1113,8 +1120,6 @@ void MainWindow::on_pushButton_2_clicked()
         recData2->avc1f=0;
 
     SDDATA[7] = inData3;
-    qDebug() << inData3 << "data check";
-    qDebug() << SDDATA[7] << "data check2";
 
     if (ui->checkBox_45->isChecked() == true){
         recData2->esw2_1f=1;
@@ -1472,8 +1477,6 @@ void MainWindow::on_pushButton_2_clicked()
             bcc2 = bcc2^SDDATA[z];
             }
     }
-    qDebug() << inData3 << "data check";
-    qDebug() << SDDATA[7] << "data check2";
 
 
     recData2->bcc1 = bcc1;
@@ -1483,7 +1486,6 @@ void MainWindow::on_pushButton_2_clicked()
     auto send = reinterpret_cast<char *>(SDDATA);
     QByteArray byteArray(send,sizeof(SD)); // 용도가?
     qDebug() << "write" << byteArray.toHex();
-qDebug() << byteArray;
     serial->write(send,sizeof(SD));
 
     this->ui->textEdit_10->clear();

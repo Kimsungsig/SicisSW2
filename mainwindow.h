@@ -18,6 +18,7 @@ public:
     ~MainWindow();
 
 public slots:
+    void closeEvent(QCloseEvent *e);
     void serial_connect();
     void serial_rescan();
     void widget_changed();
