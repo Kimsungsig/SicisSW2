@@ -170,11 +170,13 @@ void MainWindow::serial_received()
             }
 
             if (bcc2 != Inhex[25]){
+                this->ui->textEdit_3->insertHtml("BCC1 not same");
                 qDebug() << "Not bcc1 samsam";
                 qDebug() << Inhex[25];
                 qDebug() << bcc2;
             }
             if (bcc1 != Inhex[26]){
+                this->ui->textEdit_3->insertHtml("BCC2 not same");
                 qDebug() << "Not bcc2 samsam";
                 qDebug() << Inhex[26];
                 qDebug() << bcc1;
@@ -228,11 +230,13 @@ void MainWindow::serial_received()
         }
 
         if (bcc2 != Inhex[22]){
+            this->ui->textEdit_3->insertHtml("BCC1 not same");
             qDebug() << "Not bcc1 samsam";
             qDebug() << Inhex[22];
             qDebug() << bcc2;
         }
         if (bcc1 != Inhex[23]){
+            this->ui->textEdit_3->insertHtml("BCC2 not same");
             qDebug() << "Not bcc2 samsam";
             qDebug() << Inhex[23];
             qDebug() << bcc1;
@@ -534,8 +538,8 @@ void MainWindow::serial_received()
             ui->spinBox_32->setValue(Inhex[22]);
             ui->spinBox_33->setValue(Inhex[23]);
         }
-        else{
-            this->ui->textEdit_3->insertHtml("SDR MODE");
+        else if(Inhex[0] != 0x02){
+            this->ui->textEdit_3->insertHtml("stx not 0x02");
         }
 }
 
@@ -726,7 +730,7 @@ void MainWindow::on_PUSH_clicked()
 
         countdata++;
          qDebug() << "two";
-         delay(10); // 한싸이클을 모두 돌게되면 10초 휴식
+         delay(3); // 한싸이클을 모두 돌게되면 10초 휴식
     }
 }
 
