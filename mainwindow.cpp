@@ -36,7 +36,7 @@ int pushWhile = 1;
 
 
 void MainWindow::closeEvent(QCloseEvent *e){
-    qDebug() << "서브 윈도우 닫아요!!";
+    qDebug() << "CloseEvent.while over";
     pushWhile=0;
 }
 
@@ -72,10 +72,6 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(ui->slider2, SIGNAL(valueChanged(int)), this, SLOT(widget_changed()));
         connect(ui->dial, SIGNAL(valueChanged(int)), this, SLOT(widget_changed()));
         connect(serial, SIGNAL(readyRead()), this, SLOT(serial_received()));
-
-
-        //PUSH_2
-        //connect(ui->PUSH_2,SIGNAL(clicked()), this, SLOT(whilestop()));
         serial_rescan();
 }
 
@@ -125,14 +121,11 @@ void MainWindow::serial_received()
     unsigned char bcc1 = 0x00;
     unsigned char bcc2 = 0x00;
 
-    //if(readDataCheck==27)
-        //memset(Inhex,0,27);
-
-    if (ui->checkBox_97->isChecked() == true)
+    if (ui->checkBox_97->isChecked() == true) // SDR read SD Send Mode
     {
-        if(readDataCheck>0 && readDataCheck<27) // 현제는 일반데이터 값 30이니까. 이후에 필요시 변경.
+        if(readDataCheck>0 && readDataCheck<27)
         {
-            this->ui->textEdit_3->clear(); // 일단 지우고
+            this->ui->textEdit_3->clear();
             qDebug() << "one more read data ↓";
             QByteArray read_Data2;
             read_Data2 = serial->readAll();
@@ -140,24 +133,19 @@ void MainWindow::serial_received()
             int resize = 27-readDataCheck;
             unsigned char* hex2 = new unsigned char[resize];
             memcpy(hex2, read_Data2.constData(), resize);
-            //memcpy(recData, read_Data2.constData(),sizeof(SD));
             for(int i=0; i<resize; i++){
                 Inhex[i+readDataCheck] = hex2[i];
             }
 
-            readDataCheck = 27; // 이건 다시읽어온 값인데.필요시 바꿔준다.
+            readDataCheck = 27;
         }
         else
         {
-            //memset(recData,0,sizeof(SD));
             this->ui->textEdit_3->clear();
             QByteArray read_Data;
             read_Data = serial->readAll();
-            //this->ui->textEdit_9->clear();
-            //this->ui->textEdit_9->insertHtml(read_Data.toHex());
             readDataCheck = read_Data.size();
             memcpy(Inhex, read_Data.constData(), read_Data.size());
-            //memcpy(recData, read_Data.constData(),sizeof(SD));
             qDebug() << "Read data ↓";
             qDebug() << read_Data.size();
         }
@@ -191,7 +179,6 @@ void MainWindow::serial_received()
                 qDebug() << Inhex[26];
                 qDebug() << bcc1;
             }
-            //delay(0.1);
             on_pushButton_2_clicked();
         }
     }
@@ -207,7 +194,6 @@ void MainWindow::serial_received()
             int resize = 24-readDataCheck;
             unsigned char* hex2 = new unsigned char[resize];
             memcpy(hex2, read_Data2.constData(), resize);
-            //memcpy(recData, read_Data2.constData(),sizeof(SD));
             for(int i=0; i<resize; i++){
                 Inhex[i+readDataCheck] = hex2[i];
             }
@@ -216,19 +202,13 @@ void MainWindow::serial_received()
         }
         else
         {
-            //memset(recData,0,sizeof(SD));
             this->ui->textEdit_3->clear();
             QByteArray read_Data;
             read_Data = serial->readAll();
-            //this->ui->textEdit_9->clear();
-            //this->ui->textEdit_9->insertHtml(read_Data.toHex());
             readDataCheck = read_Data.size();
             memcpy(Inhex, read_Data.constData(), read_Data.size());
-            //memcpy(recData, read_Data.constData(),sizeof(SD));
             qDebug() << "Read data ↓";
             qDebug() << read_Data.size();
-            //qDebug() << Inhex;
-            //qDebug() << recData;
         }
 
         for(int i=0; i<24; i++){
@@ -391,7 +371,6 @@ void MainWindow::serial_received()
             else
                 ui->checkBox_57->setChecked(false);
 
-//recData->esw2_2f==1
             if(Inhex[10] & 0x80)
                 ui->checkBox_58->setChecked(true);
             else
@@ -689,9 +668,9 @@ void MainWindow::on_PUSH_clicked()
     while(pushWhile==1)
     {
         qDebug() << "ONE";
-        // 여기서 샛강~서울대 시나리오값 인자로 넘겨서 각각 값에 따라 처리하도록 한다.
-        TM.trainnum1 = 0x03;
-        TM.trainnum2 = 0x76;// 열차번호정보
+        // 여기서 샛강~서울대 시나리오
+        TM.trainnum1 = ui->spinBox_10->value();
+        TM.trainnum2 = ui->spinBox_11->value();
         TM.dstcode = 0x6F; // 종착역 111
         TM.curcode = 0x65;
         TM.nxtcode = 0x66;
@@ -745,11 +724,9 @@ void MainWindow::on_PUSH_clicked()
         if(pushWhile==0)
             continue;
 
-        //on_textEdit_destroyed(TM);
         countdata++;
          qDebug() << "two";
-         delay(10);
-         //this->ui->textEdit_11->insertHtml("1 싸이클 over and 10 second wait,,,");
+         delay(10); // 한싸이클을 모두 돌게되면 10초 휴식
     }
 }
 
@@ -817,7 +794,6 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
     sendData2->trainNum1 = data.trainnum1;
     ui->spinBox_10->setValue(data.trainnum1);
     SDRDATA[10] = data.trainnum1;
-            //ui->spinBox_10->value();
     sendData2->trainNum2 = data.trainnum2;
     ui->spinBox_11->setValue(data.trainnum2);
     SDRDATA[11] = data.trainnum2;
@@ -1454,8 +1430,6 @@ void MainWindow::on_pushButton_2_clicked()
         recData2->bcc1=ui->spinBox_32->value();
         recData2->bcc2=ui->spinBox_33->value();
     }
-    //recData2->sp_Bit1=0;
-    //recData2->sp_Bit2=0;
     recData2->sp_Bit3=0;
     recData2->sp_Bit4=0;
     recData2->sp_Bit5=0;
@@ -1500,7 +1474,6 @@ void MainWindow::on_PUSH_2_clicked()
 
 void MainWindow::on_PUSH_3_clicked()
 {
-    //SDR *onedata = new SDR;
     unsigned char SDRDATA[27];
     SDR *sendData2 = new SDR;
     unsigned char inData2 = 0x00;
@@ -1634,11 +1607,6 @@ void MainWindow::on_PUSH_3_clicked()
         inData3 += 0x20;
     }
 
-//    if(data.DIR==1)
-//        ui->checkBox_8->setChecked(true);
-//    else
-//        ui->checkBox_8->setChecked(false);
-
     if (ui->checkBox_8->isChecked() == true){ // 전체 출입문 닫힘
         sendData2->dir=1;
         inData3 += 0x10;
@@ -1662,22 +1630,8 @@ void MainWindow::on_PUSH_3_clicked()
     }
     SDRDATA[21] = inData3;
 
-    //spinBox_24
     sendData2->sp_bit1 = ui->spinBox_24->value();
     inData4 += ui->spinBox_24->value();
-
-//    if(data.DCW==1){
-//        ui->checkBox_13->setChecked(true);}
-//    else{
-//        ui->checkBox_13->setChecked(false);}
-//    if(data.DOW2==1)
-//        ui->checkBox_14->setChecked(true);
-//    else
-//        ui->checkBox_14->setChecked(false);
-//    if(data.DOW1==1)
-//        ui->checkBox_15->setChecked(true);
-//    else
-//        ui->checkBox_15->setChecked(false);
 
     if (ui->checkBox_13->isChecked() == true){ //
         sendData2->dcw=1;
@@ -1721,8 +1675,6 @@ void MainWindow::on_PUSH_3_clicked()
 
 
     auto send = reinterpret_cast<char *>(SDRDATA);
-    //serial->write(send,sizeof(SDR));
-
     serial->write(send,sizeof(SDR));
 
     QByteArray byteArray(send,sizeof(SDR)); // 용도가?
