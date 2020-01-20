@@ -162,24 +162,24 @@ void MainWindow::serial_received()
             for(int z=1; z<=24; z++)
             {
                 if(z%2==0){
-                    bcc1 = bcc1^Inhex[z];
+                    bcc2 = bcc2^Inhex[z];
                 }
                 else{
-                    bcc2 = bcc2^Inhex[z];
+                    bcc1 = bcc1^Inhex[z];
                     }
             }
 
-            if (bcc2 != Inhex[25]){
+            if (bcc1 != Inhex[25]){
                 this->ui->textEdit_3->insertHtml("BCC1 not same");
                 qDebug() << "Not bcc1 samsam";
                 qDebug() << Inhex[25];
-                qDebug() << bcc2;
+                qDebug() << bcc1;
             }
-            if (bcc1 != Inhex[26]){
+            if (bcc2 != Inhex[26]){
                 this->ui->textEdit_3->insertHtml("BCC2 not same");
                 qDebug() << "Not bcc2 samsam";
                 qDebug() << Inhex[26];
-                qDebug() << bcc1;
+                qDebug() << bcc2;
             }
             on_pushButton_2_clicked();
         }
@@ -222,24 +222,24 @@ void MainWindow::serial_received()
         for(int z=1; z<=21; z++)
         {
             if(z%2==0){
-                bcc1 = bcc1^Inhex[z];
+                bcc2 = bcc2^Inhex[z];
             }
             else{
-                bcc2 = bcc2^Inhex[z];
+                bcc1 = bcc1^Inhex[z];
                 }
         }
 
-        if (bcc2 != Inhex[22]){
+        if (bcc1 != Inhex[22]){
             this->ui->textEdit_3->insertHtml("BCC1 not same");
             qDebug() << "Not bcc1 samsam";
             qDebug() << Inhex[22];
-            qDebug() << bcc2;
+            qDebug() << bcc1;
         }
-        if (bcc1 != Inhex[23]){
+        if (bcc2 != Inhex[23]){
             this->ui->textEdit_3->insertHtml("BCC2 not same");
             qDebug() << "Not bcc2 samsam";
             qDebug() << Inhex[23];
-            qDebug() << bcc1;
+            qDebug() << bcc2;
         }
     }
 
@@ -350,10 +350,10 @@ void MainWindow::serial_received()
             else
                 ui->checkBox_52->setChecked(false);
 
-            if(Inhex[9] & 0x80)
-                ui->checkBox_25->setChecked(true);
-            else
-                ui->checkBox_25->setChecked(false);
+//            if(Inhex[9] & 0x80)
+//                ui->checkBox_25->setChecked(true);
+//            else
+//                ui->checkBox_25->setChecked(false);
             if(Inhex[9] & 0x40)
                 ui->checkBox_53->setChecked(true);
             else
@@ -531,6 +531,9 @@ void MainWindow::serial_received()
                 ui->checkBox_93->setChecked(true);
             else
                 ui->checkBox_93->setChecked(false);
+
+            ui->spinBox_27->setValue(Inhex[17]);
+            ui->spinBox_28->setValue(Inhex[18]);
 
             ui->spinBox_29->setValue(Inhex[19]);
             ui->spinBox_30->setValue(Inhex[20]);
@@ -951,17 +954,17 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
     for(int z=1; z<=24; z++)
     {
         if(z%2==0){
-            bcc1 = bcc1^SDRDATA[z];
+            bcc2 = bcc2^SDRDATA[z];
         }
         else{
-            bcc2 = bcc2^SDRDATA[z];
+            bcc1 = bcc1^SDRDATA[z];
             }
     }
 
-    SDRDATA[25] = bcc2;
-    sendData2->bcc1 = bcc2;
-    SDRDATA[26] = bcc1; //BCC2
-    sendData2->bcc2 = bcc1;
+    SDRDATA[25] = bcc1;
+    sendData2->bcc1 = bcc1;
+    SDRDATA[26] = bcc2; //BCC2
+    sendData2->bcc2 = bcc2;
 
     auto send = reinterpret_cast<char *>(SDRDATA);
 
@@ -1152,12 +1155,12 @@ void MainWindow::on_pushButton_2_clicked()
 
     SDDATA[8] = inData4;
 
-    if (ui->checkBox_25->isChecked() == true){
-        recData2->sp_Bit4=1;
-        inData5 = inData5 | 0x80;
-    }
-    else
-        recData2->sp_Bit4=0;
+//    if (ui->checkBox_25->isChecked() == true){
+//        recData2->sp_Bit4=1;
+//        inData5 = inData5 | 0x80;
+//    }
+//    else
+//        recData2->sp_Bit4=0;
     if (ui->checkBox_53->isChecked() == true){
         recData2->scam2_2f=1;
         inData5 = inData5 | 0x40;
@@ -1449,10 +1452,10 @@ void MainWindow::on_pushButton_2_clicked()
     for(int z=1; z<=21; z++)
     {
         if(z%2==0){
-            bcc1 = bcc1^SDDATA[z];
+            bcc2 = bcc2^SDDATA[z];
         }
         else{
-            bcc2 = bcc2^SDDATA[z];
+            bcc1 = bcc1^SDDATA[z];
             }
     }
 
@@ -1665,17 +1668,17 @@ void MainWindow::on_PUSH_3_clicked()
     for(int z=1; z<=24; z++)
     {
         if(z%2==0){
-            bcc1 = bcc1^SDRDATA[z];
+            bcc2 = bcc2^SDRDATA[z];
         }
         else{
-            bcc2 = bcc2^SDRDATA[z];
+            bcc1 = bcc1^SDRDATA[z];
             }
     }
 
-    SDRDATA[25] = bcc2;
-    sendData2->bcc1 = bcc2;
-    SDRDATA[26] = bcc1; //BCC2
-    sendData2->bcc2 = bcc1;
+    SDRDATA[25] = bcc1;
+    sendData2->bcc1 = bcc1;
+    SDRDATA[26] = bcc2; //BCC2
+    sendData2->bcc2 = bcc2;
 
 
     auto send = reinterpret_cast<char *>(SDRDATA);
