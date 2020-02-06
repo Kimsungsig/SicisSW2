@@ -20,17 +20,10 @@ QString hour;
 QString min;
 QString sec;
 QString sec2;
-//unsigned char SDRDATA[27];
-//unsigned char SDDATA[24];
-//unsigned char *SDRDATA2 = new unsigned char[27];
-
-//SDR sendData;
-//SDR *sendData2 = new SDR;
 QSerialPort *serial;
 int readDataCheck=0;
 unsigned char* Inhex = new unsigned char[30];
 unsigned char rundist = 0x00;
-//SD *recData = new SD;
 
 int pushWhile = 1;
 
@@ -94,6 +87,7 @@ void MainWindow::serial_connect()
 
         if(!serial->open(QIODevice::ReadWrite)){
             qDebug() << "Serial port open error";
+            this->ui->textEdit->insertHtml("Serial port open error");
         }
 }
 
