@@ -26,6 +26,7 @@ public slots:
     void on_PUSH_clicked();
     void on_textEdit_destroyed(struct trainMacro data);
     void train_set(struct trainMacro traindata);
+    void serial_disconnect();
 
 
 private slots:
@@ -36,6 +37,8 @@ private slots:
     void on_PUSH_3_clicked();
 
 //    void on_pushButton_clicked();
+
+    //void on_connect_button_clicked();
 
 private:
     Ui::MainWindow *ui;

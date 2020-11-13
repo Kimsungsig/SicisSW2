@@ -23,10 +23,11 @@ QString sec2;
 QSerialPort *serial;
 int readDataCheck=0;
 unsigned char* Inhex = new unsigned char[30];
-unsigned char rundist = 0x00;
+//unsigned char rundist = 0x00;
+int rundist = 0;
+int rundist2 = 0;
 
 int pushWhile = 1;
-
 
 void MainWindow::closeEvent(QCloseEvent *e){
     qDebug() << "CloseEvent.while over";
@@ -46,6 +47,11 @@ QString getStringFromUnsignedChar( unsigned char str ){
     return result;
 }
 
+unsigned char to_bcd(unsigned char val)
+{
+    return ((val / 10) << 4) | (val % 10);
+}
+
 void delay(double sec)
 {
     QTime dieTime= QTime::currentTime().addSecs(sec);
@@ -56,15 +62,17 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    serial = new QSerialPort(this);
         ui->setupUi(this);
         ui->lcd_temp->setPalette(Qt::red);
-        serial = new QSerialPort(this);
+        //serial = new QSerialPort(this);
         connect(ui->rescan_Button, SIGNAL(clicked()), this, SLOT(serial_rescan()));
         connect(ui->connect_button, SIGNAL(clicked()), this, SLOT (serial_connect()));
         connect(ui->slider1, SIGNAL(valueChanged(int)), this, SLOT(widget_changed()));
         connect(ui->slider2, SIGNAL(valueChanged(int)), this, SLOT(widget_changed()));
         connect(ui->dial, SIGNAL(valueChanged(int)), this, SLOT(widget_changed()));
         connect(serial, SIGNAL(readyRead()), this, SLOT(serial_received()));
+        connect(ui->connect_button_2, SIGNAL(clicked()), this, SLOT (serial_disconnect()));
         serial_rescan();
 }
 
@@ -77,19 +85,41 @@ MainWindow::~MainWindow()
 
 void MainWindow::serial_connect()
 {
+        //serial = new QSerialPort(this);
+
+        this->ui->textEdit->clear();
         serial->setPortName(ui->port_box->currentText());
         serial->setBaudRate(QSerialPort::Baud19200);
         serial->setDataBits(QSerialPort::Data8);
         serial->setParity(QSerialPort::EvenParity);
         serial->setStopBits(QSerialPort::OneStop);
         serial->setFlowControl(QSerialPort::NoFlowControl);
-        this->ui->textEdit->insertHtml("port connect OK");
+        //this->ui->textEdit->insertHtml("port connect OK");
 
         if(!serial->open(QIODevice::ReadWrite)){
             qDebug() << "Serial port open error";
-            this->ui->textEdit->insertHtml("Serial port open error");
+            this->ui->textEdit->insertHtml("★Serial port open error★");
+            ui->PUSH->setEnabled(false);
+            ui->PUSH_3->setEnabled(false);
+        }
+        else
+        {
+            this->ui->textEdit->insertHtml("port connect OK");
+            ui->PUSH->setEnabled(true);
+            ui->PUSH_3->setEnabled(true);
         }
 }
+
+void MainWindow::serial_disconnect()
+{
+        this->ui->textEdit->clear();
+        serial->close();
+        this->ui->textEdit->insertHtml("Dis connect!!");
+        ui->PUSH->setEnabled(false);
+        ui->PUSH_3->setEnabled(false);
+}
+
+
 
 void MainWindow::serial_rescan()
 {
@@ -207,9 +237,60 @@ void MainWindow::serial_received()
             qDebug() << read_Data.size();
         }
 
+//        qDebug() << "Read data ↓";
+//        qDebug() << readDataCheck;
         for(int i=0; i<24; i++){
             this->ui->textEdit_3->insertHtml(getStringFromUnsignedChar(Inhex[i]));
         }
+        this->ui->textEdit_39->clear();
+        this->ui->textEdit_39->insertHtml(getStringFromUnsignedChar(Inhex[0]));
+        this->ui->textEdit_40->clear();
+        this->ui->textEdit_40->insertHtml(getStringFromUnsignedChar(Inhex[1]));
+        this->ui->textEdit_41->clear();
+        this->ui->textEdit_41->insertHtml(getStringFromUnsignedChar(Inhex[2]));
+        this->ui->textEdit_42->clear();
+        this->ui->textEdit_42->insertHtml(getStringFromUnsignedChar(Inhex[3]));
+        this->ui->textEdit_43->clear();
+        this->ui->textEdit_43->insertHtml(getStringFromUnsignedChar(Inhex[4]));
+        this->ui->textEdit_44->clear();
+        this->ui->textEdit_44->insertHtml(getStringFromUnsignedChar(Inhex[5]));
+        this->ui->textEdit_45->clear();
+        this->ui->textEdit_45->insertHtml(getStringFromUnsignedChar(Inhex[6]));
+        this->ui->textEdit_46->clear();
+        this->ui->textEdit_46->insertHtml(getStringFromUnsignedChar(Inhex[7]));
+        this->ui->textEdit_47->clear();
+        this->ui->textEdit_47->insertHtml(getStringFromUnsignedChar(Inhex[8]));
+        this->ui->textEdit_48->clear();
+        this->ui->textEdit_48->insertHtml(getStringFromUnsignedChar(Inhex[9]));
+        this->ui->textEdit_49->clear();
+        this->ui->textEdit_49->insertHtml(getStringFromUnsignedChar(Inhex[10]));
+        this->ui->textEdit_50->clear();
+        this->ui->textEdit_50->insertHtml(getStringFromUnsignedChar(Inhex[11]));
+        this->ui->textEdit_51->clear();
+        this->ui->textEdit_51->insertHtml(getStringFromUnsignedChar(Inhex[12]));
+        this->ui->textEdit_52->clear();
+        this->ui->textEdit_52->insertHtml(getStringFromUnsignedChar(Inhex[13]));
+        this->ui->textEdit_53->clear();
+        this->ui->textEdit_53->insertHtml(getStringFromUnsignedChar(Inhex[14]));
+        this->ui->textEdit_54->clear();
+        this->ui->textEdit_54->insertHtml(getStringFromUnsignedChar(Inhex[15]));
+        this->ui->textEdit_55->clear();
+        this->ui->textEdit_55->insertHtml(getStringFromUnsignedChar(Inhex[16]));
+        this->ui->textEdit_56->clear();
+        this->ui->textEdit_56->insertHtml(getStringFromUnsignedChar(Inhex[17]));
+        this->ui->textEdit_57->clear();
+        this->ui->textEdit_57->insertHtml(getStringFromUnsignedChar(Inhex[18]));
+        this->ui->textEdit_58->clear();
+        this->ui->textEdit_58->insertHtml(getStringFromUnsignedChar(Inhex[19]));
+        this->ui->textEdit_59->clear();
+        this->ui->textEdit_59->insertHtml(getStringFromUnsignedChar(Inhex[20]));
+        this->ui->textEdit_60->clear();
+        this->ui->textEdit_60->insertHtml(getStringFromUnsignedChar(Inhex[21]));
+        this->ui->textEdit_61->clear();
+        this->ui->textEdit_61->insertHtml(getStringFromUnsignedChar(Inhex[22]));
+        this->ui->textEdit_62->clear();
+        this->ui->textEdit_62->insertHtml(getStringFromUnsignedChar(Inhex[23]));
+
 
         bcc1 = 0x00;
         bcc2 = 0x00;
@@ -277,7 +358,12 @@ void MainWindow::serial_received()
                 ui->checkBox_96->setChecked(false);
 
             ui->spinBox_31->setValue(Inhex[6]);
-
+            // (33번 or 34번 체크) and (35번체크 or 36번체크) and 96번체크해제
+            //qDebug() << "여기 타는거 맞지?";
+            if ((ui->checkBox_33->isChecked() == true || ui->checkBox_34->isChecked() == true) && (ui->checkBox_35->isChecked() == true || ui->checkBox_36->isChecked() == true) && (ui->checkBox_96->isChecked() == false))
+            {
+                ui->checkBox_16->setChecked(false);
+            }
             if(Inhex[7] & 0x80)
                 ui->checkBox_37->setChecked(true);
             else
@@ -543,112 +629,161 @@ void MainWindow::serial_received()
 void MainWindow::train_set(struct trainMacro traindata)
 {
     int countdata=0;
-    for(countdata=0; countdata<14; countdata++)
+    traindata.DCW=0;
+    traindata.DOW1=0;
+    traindata.DIR =0;
+    for(countdata=0; countdata<150; countdata++)
     {
         if (countdata == 0) {
             traindata.trainspeed = 0x00; // 출발
-            traindata.rundist2 = rundist;
-            traindata.DIR = 1;
+            traindata.rundist1 = 0; // 거리 0
+            traindata.rundist2 = 0; // 거리 0
+            rundist = 0; // 거리 0
+            traindata.DCW=1;
+            traindata.DIR = 0; //도어닫힘
         }
-        else if (countdata == 1) {
-            traindata.trainspeed = 0x05; // 속도 5
-            rundist = rundist + 1;
-            traindata.rundist2 = rundist;
-            traindata.DIR = 1;
-        }
-        else if (countdata == 2) {
-            traindata.trainspeed = 0x0a; // 속도 10
-            rundist = rundist + 1;
-            traindata.rundist2 = rundist;
-            traindata.DIR = 1;
-        }
-        else if (countdata == 3) {
-            traindata.trainspeed = 0x0F; // 속도 15
-            rundist = rundist + 1;
-            traindata.rundist2 = rundist;
-            traindata.DIR = 1;
-        }
-        else if (countdata == 4) {
-            traindata.trainspeed = 0x14; // 속도 20
-            rundist = rundist + 2;
-            traindata.rundist2 = rundist;
-            traindata.DIR = 1;
-        }
-        else if (countdata == 5) {
-            traindata.trainspeed = 0x19; // 속도 25
-            rundist = rundist + 2;
-            traindata.rundist2 = rundist;
-            traindata.DIR = 1;
-        }
-        else if (countdata == 6) {
-            traindata.trainspeed = 0x1E; // 속도 30
-            rundist = rundist + 3;
-            traindata.rundist2 = rundist;
-            traindata.DIR = 1;
-        }
-        else if (countdata == 7) {
-            traindata.trainspeed = 0x19; // 속도 25
-            rundist = rundist + 2;
-            traindata.rundist2 = rundist;
-            traindata.DIR = 1;
-        }
-        else if (countdata == 8) {
-            traindata.trainspeed = 0x14; // 속도 20
-            rundist = rundist + 2;
-            traindata.rundist2 = rundist;
-            traindata.DIR = 1;
-        }
-        else if (countdata == 9) {
-            traindata.trainspeed = 0x0F; // 속도 15
-            rundist = rundist + 2;
-            traindata.rundist2 = rundist;
-            traindata.DIR = 1;
-        }
-        else if (countdata == 10) {
-            traindata.trainspeed = 0x0a; // 속도 10
-            rundist = rundist + 1;
-            traindata.rundist2 = rundist;
-            traindata.DIR = 1;
-        }
-        else if (countdata == 11) {
-            traindata.trainspeed = 0x05; // 속도 5
-            rundist = rundist + 1;
-            traindata.rundist2 = rundist;
-            traindata.DIR = 1;
-        }
-        else if (countdata == 12) {
-            traindata.trainspeed = 0x00; // 멈춤, 도어열림
-            traindata.rundist2 = rundist;
+        else if(countdata >= 1 && countdata < 11)
+        {
+            traindata.DCW=1;
             traindata.DIR = 0;
+            if(countdata == 10)
+            {
+                traindata.DCW=0;
+                traindata.DIR = 1;
+            }
         }
-        else if (countdata == 13) {
-            traindata.trainspeed = 0x00; // 도어닫힘
-            traindata.rundist2 = rundist;
+        else if (countdata >= 11 && countdata < 27) {
+            if(countdata==1)
+            {
+                traindata.DCW=1;
+            }
+            else
+            {
+                traindata.DCW=0;
+            }
+            traindata.trainspeed += 0x05; // 속도 5씩 증가시킬것(80키로까지)
+            //qDebug() << traindata.trainspeed << "= 현제 시속";
+            rundist = (countdata * 5) * (0.278); // 1km/h = 0.278m/s
+            if(countdata!=1)
+            {
+               rundist2 = traindata.rundist2 + rundist; // 방금 계산한 거리값 + 지금까지 이동거리 계산할것.
+               qDebug() << rundist2 << "= 현제 총 이동거리1";
+            }
+            //qDebug() << rundist << "= 1초 이동거리";
+            traindata.rundist2 += rundist; // 계산된 거리값을 rundist2에 넣어주고
+            //qDebug() << traindata.rundist2 << "= 현제 총 이동거리1";
+            //qDebug() << rundist << "= 현제 총 이동거리2";
+            //qDebug() << traindata.rundist2 << "= 현제 총 이동거리3";
+            //qDebug() << countdata << "= 몇번째인가.";
+            traindata.DIR = 1;
+            if(traindata.curcode == 0x00 && countdata == 3) // 최초출발 10미터 맞추기
+            {
+                traindata.DOW1=1;
+                traindata.rundist2=11;
+            }
+            else
+            {
+                traindata.DOW1=0;
+            }
+
+        }
+        else if (countdata >= 27 && countdata < 133) {
+            traindata.trainspeed = 0x50; // 80키로 고정의 시간.
+            //qDebug() << traindata.trainspeed << "= 현제 시속";
+            rundist = 23; // 80km/h = 22.23m/s
+            //qDebug() << rundist << "= 1초 이동거리";
+            rundist2 = traindata.rundist2 + rundist; // 방금 계산한 거리값 + 지금까지 이동거리 계산할것.
+            //qDebug() << rundist2 << "= 현제 총 이동거리1";
+            traindata.rundist2 += rundist; // 계산된 거리값을 rundist2에 넣어주고
+            //qDebug() << traindata.rundist1 << "  현제 총 이동거리1";
+            //qDebug() << traindata.rundist2 << "= 현제 총 이동거리2";
+            //rundist = traindata.rundist2 + rundist; // 방금 계산한 거리값 + 지금까지 이동거리 계산할것.
+
+            //qDebug() << rundist << "= 현제 총 이동거리3";
+            //qDebug() << countdata << "= 몇번째인가.";
+            traindata.DIR = 1;
+            if(countdata == 85)
+            {
+                traindata.DOW1=1;
+            }
+
+        }
+        else if (countdata >= 133 && countdata < 141) {
+            traindata.trainspeed -= 0x0a; // 속도 10씩 감소
+            //qDebug() << traindata.trainspeed << "= 현제 시속";
+            rundist = (traindata.trainspeed) * (0.278); // 1km/h = 0.278m/s
+            rundist2 = traindata.rundist2 + rundist; // 방금 계산한 거리값 + 지금까지 이동거리 계산할것.
+            traindata.rundist2 += rundist;
+            //rundist = traindata.rundist2 + rundist;
+            //qDebug() << traindata.rundist1 << "  현제 총 이동거리1";
+            //qDebug() << traindata.rundist2 << "= 현제 총 이동거리2";
+            //qDebug() << rundist << "= 현제 총 이동거리3";
+            //qDebug() << countdata << "= 몇번째인가.";
             traindata.DIR = 1;
         }
 
-        if (traindata.trainspeed == 0x00){
-             traindata.DCW=0;
-             traindata.DOW1=0;
+        else if (countdata == 141) {
+            traindata.trainspeed = 0x00; // 멈춤, 도어열림
+            traindata.rundist1 = 0;
+            traindata.rundist2 = 0;
+            rundist = 0;
+            traindata.DIR = 0;
+            traindata.DCW = 0;
         }
-        else{
-             traindata.DCW=1;
-             traindata.DOW1=1;
+        else if (countdata >= 142 && countdata < 149) {
+            traindata.trainspeed = 0x00; // 멈춤, 도어열림
+            traindata.rundist1 = 0;
+            traindata.rundist2 = 0;
+            rundist = 0;
+            traindata.DIR = 0;
+            traindata.DCW = 1;
         }
-            on_textEdit_destroyed(traindata);
-            if (rundist == 0xFF)
-            {
-                traindata.rundist1 = traindata.rundist1 + 1;
-                rundist = 0x00;
-            }
+        else if (countdata == 150) {
+            traindata.trainspeed = 0x00; // 도어닫힘
+            traindata.rundist1 = 0;
+            traindata.rundist2 = 0;
+            rundist = 0;
+            traindata.DIR = 1;
+            traindata.DCW = 0;
+
+        }
+
+//        if (traindata.trainspeed == 0x00){
+//             traindata.DCW=0;
+//             traindata.DOW1=0;
+//        }
+//        else{
+//             traindata.DCW=1;
+//             traindata.DOW1=1;
+//        }
+//        if(traindata.rundist2 >= 255)
+//        {
+//            traindata.rundist1 = traindata.rundist1 + 1;
+//            traindata.rundist2=0x00;
+//        }
+        //qDebug() << "rundist = " << rundist;
+        if (rundist2 >= 255)
+        {
+            //rundist2 = traindata.rundist2 + rundist; // 방금 계산한 거리값 + 지금까지 이동거리 계산할것.
+            traindata.rundist1 += 1; // 1 증가시켜주고
+            //rundist2 = rundist2-255; // 증가한만큼 내려주고. 말그대로 전체 4자리수 맞추기
+        }
+
+        on_textEdit_destroyed(traindata);
+
             delay(1);
 
+            //rundist1 = traindata.rundist1;
+
             if(pushWhile==0)
-                countdata=14;
+                countdata=150;
+
     }
 }
 void MainWindow::on_PUSH_clicked()
 {
+    ui->PUSH->setEnabled(false);
+    ui->PUSH_2->setEnabled(true);
     pushWhile=1;
     int countdata=0;
     trainMacro TM;
@@ -672,55 +807,62 @@ void MainWindow::on_PUSH_clicked()
         // 여기서 샛강~서울대 시나리오
         TM.trainnum1 = ui->spinBox_10->value();
         TM.trainnum2 = ui->spinBox_11->value();
-        TM.dstcode = 0x6F; // 종착역 111
-        TM.curcode = 0x65;
-        TM.nxtcode = 0x66;
+        TM.dstcode = 0x0b; // 종착역 111
+        TM.curcode = 0x00;
+        TM.nxtcode = 0x01;
+        train_set(TM);
+        qDebug() << "two";
+        if(pushWhile==0)
+            continue;
+        qDebug() << pushWhile;
+        TM.curcode = 0x01;
+        TM.nxtcode = 0x02;
         train_set(TM);
         if(pushWhile==0)
             continue;
         qDebug() << pushWhile;
-        TM.curcode = 0x66;
-        TM.nxtcode = 0x67;
+        TM.curcode = 0x02;
+        TM.nxtcode = 0x03;
         train_set(TM);
         if(pushWhile==0)
             continue;
-        TM.curcode = 0x67;
-        TM.nxtcode = 0x68;
+        TM.curcode = 0x03;
+        TM.nxtcode = 0x04;
         train_set(TM);
         if(pushWhile==0)
             continue;
-        TM.curcode = 0x68;
-        TM.nxtcode = 0x69;
+        TM.curcode = 0x04;
+        TM.nxtcode = 0x05;
         train_set(TM);
         if(pushWhile==0)
             continue;
-        TM.curcode = 0x69;
-        TM.nxtcode = 0x6a;
+        TM.curcode = 0x05;
+        TM.nxtcode = 0x06;
         train_set(TM);
         if(pushWhile==0)
             continue;
-        TM.curcode = 0x6a;
-        TM.nxtcode = 0x6b;
+        TM.curcode = 0x06;
+        TM.nxtcode = 0x07;
         train_set(TM);
         if(pushWhile==0)
             continue;
-        TM.curcode = 0x6b;
-        TM.nxtcode = 0x6c;
+        TM.curcode = 0x07;
+        TM.nxtcode = 0x08;
         train_set(TM);
         if(pushWhile==0)
             continue;
-        TM.curcode = 0x6c;
-        TM.nxtcode = 0x6d;
+        TM.curcode = 0x08;
+        TM.nxtcode = 0x09;
         train_set(TM);
         if(pushWhile==0)
             continue;
-        TM.curcode = 0x6d;
-        TM.nxtcode = 0x6e;
+        TM.curcode = 0x09;
+        TM.nxtcode = 0x0a;
         train_set(TM);
         if(pushWhile==0)
             continue;
-        TM.curcode = 0x6e;
-        TM.nxtcode = 0x6f;
+        TM.curcode = 0x0a;
+        TM.nxtcode = 0x0b;
         train_set(TM);
         if(pushWhile==0)
             continue;
@@ -728,6 +870,8 @@ void MainWindow::on_PUSH_clicked()
         countdata++;
          qDebug() << "two";
          delay(3); // 한싸이클을 모두 돌게되면 10초 휴식
+         TM.rundist1 = 0x00;
+         rundist = 0;
     }
 }
 
@@ -780,24 +924,24 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
     SDRDATA[2] = ui->spinBox_2->value();
     sendData2->dataType = ui->spinBox_3->value();// 데이터 타입
     SDRDATA[3] = ui->spinBox_3->value();
-    sendData2->year = ui->spinBox_4->value();//year
-    SDRDATA[4] = ui->spinBox_4->value();
-    sendData2->month = ui->spinBox_5->value();//month
-    SDRDATA[5] = ui->spinBox_5->value();
-    sendData2->day = ui->spinBox_6->value();//day
-    SDRDATA[6] = ui->spinBox_6->value();
-    sendData2->hour = ui->spinBox_7->value();//hour
-    SDRDATA[7] = ui->spinBox_7->value();
-    sendData2->min = ui->spinBox_8->value();//minute
-    SDRDATA[8] = ui->spinBox_8->value();
-    sendData2->sec = ui->spinBox_9->value();//second
-    SDRDATA[9] = ui->spinBox_9->value();
-    sendData2->trainNum1 = data.trainnum1;
+    sendData2->year = to_bcd(ui->spinBox_4->value());//year
+    SDRDATA[4] = to_bcd(ui->spinBox_4->value());
+    sendData2->month = to_bcd(ui->spinBox_5->value());//month
+    SDRDATA[5] = to_bcd(ui->spinBox_5->value());
+    sendData2->day = to_bcd(ui->spinBox_6->value());//day
+    SDRDATA[6] = to_bcd(ui->spinBox_6->value());
+    sendData2->hour = to_bcd(ui->spinBox_7->value());//hour
+    SDRDATA[7] = to_bcd(ui->spinBox_7->value());
+    sendData2->min = to_bcd(ui->spinBox_8->value());//minute
+    SDRDATA[8] = to_bcd(ui->spinBox_8->value());
+    sendData2->sec = to_bcd(ui->spinBox_9->value());//second
+    SDRDATA[9] = to_bcd(ui->spinBox_9->value());
+    sendData2->trainNum1 = to_bcd(data.trainnum1);
     ui->spinBox_10->setValue(data.trainnum1);
-    SDRDATA[10] = data.trainnum1;
-    sendData2->trainNum2 = data.trainnum2;
+    SDRDATA[10] = to_bcd(data.trainnum1);
+    sendData2->trainNum2 = to_bcd(data.trainnum2);
     ui->spinBox_11->setValue(data.trainnum2);
-    SDRDATA[11] = data.trainnum2;
+    SDRDATA[11] = to_bcd(data.trainnum2);
 
     sendData2->speed = data.trainspeed;// 속도 SPEED
     SDRDATA[12] = data.trainspeed;
@@ -828,11 +972,17 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
 
     if (ui->checkBox_16->isChecked() == true) // 시험요청여부
         sendData2->test_start_req=1;
-    sendData2->sp_bit0 = ui->spinBox_23->value(); // spare
-    if (sendData2->test_start_req==1)
-        SDRDATA[19] = sendData2->sp_bit0 + 0x80;
     else
-        SDRDATA[19] = sendData2->sp_bit0;
+        sendData2->test_start_req=0;
+    //sendData2->sp_bit0 = ui->spinBox_23->value(); // spare
+    if (sendData2->test_start_req==1)
+        SDRDATA[19] = 0x80;
+        //SDRDATA[19] = sendData2->test_start_req;
+    else
+        SDRDATA[19] = 0x00;
+        //SDRDATA[19] = sendData2->test_start_req;
+
+    //qDebug() << SDRDATA[19] << "why 80?";
 
     int countdata = ui->comboBox->currentIndex();//운전모드
     if (countdata == 0){sendData2->drive_DM=1;
@@ -930,7 +1080,7 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
     }
     if (ui->checkBox_15->isChecked() == true){ //
         sendData2->dow1=1;
-        inData4 += 0x04;
+        inData4 += 0x01;
     }
     SDRDATA[22] = inData4;
 
@@ -968,9 +1118,64 @@ void MainWindow::on_textEdit_destroyed(struct trainMacro data)
     for(int i=0; i<=26; i++)
     {
         this->ui->textEdit_2->insertHtml(getStringFromUnsignedChar(SDRDATA[i]));
-    }
+    }/*
     this->ui->textEdit_9->clear();
-    this->ui->textEdit_9->insertHtml(getStringFromUnsignedChar(SDRDATA[ui->spinBox_34->value()]));
+    this->ui->textEdit_9->insertHtml(getStringFromUnsignedChar(SDRDATA[ui->spinBox_34->value()]));*/
+    this->ui->textEdit_11->clear();
+    this->ui->textEdit_11->insertHtml(getStringFromUnsignedChar(SDRDATA[0]));
+    this->ui->textEdit_13->clear();
+    this->ui->textEdit_13->insertHtml(getStringFromUnsignedChar(SDRDATA[1]));
+    this->ui->textEdit_14->clear();
+    this->ui->textEdit_14->insertHtml(getStringFromUnsignedChar(SDRDATA[2]));
+    this->ui->textEdit_15->clear();
+    this->ui->textEdit_15->insertHtml(getStringFromUnsignedChar(SDRDATA[3]));
+    this->ui->textEdit_16->clear();
+    this->ui->textEdit_16->insertHtml(getStringFromUnsignedChar(SDRDATA[4]));
+    this->ui->textEdit_17->clear();
+    this->ui->textEdit_17->insertHtml(getStringFromUnsignedChar(SDRDATA[5]));
+    this->ui->textEdit_18->clear();
+    this->ui->textEdit_18->insertHtml(getStringFromUnsignedChar(SDRDATA[6]));
+    this->ui->textEdit_19->clear();
+    this->ui->textEdit_19->insertHtml(getStringFromUnsignedChar(SDRDATA[7]));
+    this->ui->textEdit_20->clear();
+    this->ui->textEdit_20->insertHtml(getStringFromUnsignedChar(SDRDATA[8]));
+    this->ui->textEdit_21->clear();
+    this->ui->textEdit_21->insertHtml(getStringFromUnsignedChar(SDRDATA[9]));
+    this->ui->textEdit_22->clear();
+    this->ui->textEdit_22->insertHtml(getStringFromUnsignedChar(SDRDATA[10]));
+    this->ui->textEdit_23->clear();
+    this->ui->textEdit_23->insertHtml(getStringFromUnsignedChar(SDRDATA[11]));
+    this->ui->textEdit_24->clear();
+    this->ui->textEdit_24->insertHtml(getStringFromUnsignedChar(SDRDATA[12]));
+    this->ui->textEdit_25->clear();
+    this->ui->textEdit_25->insertHtml(getStringFromUnsignedChar(SDRDATA[13]));
+    this->ui->textEdit_26->clear();
+    this->ui->textEdit_26->insertHtml(getStringFromUnsignedChar(SDRDATA[14]));
+    this->ui->textEdit_27->clear();
+    this->ui->textEdit_27->insertHtml(getStringFromUnsignedChar(SDRDATA[15]));
+    this->ui->textEdit_28->clear();
+    this->ui->textEdit_28->insertHtml(getStringFromUnsignedChar(SDRDATA[16]));
+    this->ui->textEdit_29->clear();
+    this->ui->textEdit_29->insertHtml(getStringFromUnsignedChar(SDRDATA[17]));
+    this->ui->textEdit_30->clear();
+    this->ui->textEdit_30->insertHtml(getStringFromUnsignedChar(SDRDATA[18]));
+    this->ui->textEdit_31->clear();
+    this->ui->textEdit_31->insertHtml(getStringFromUnsignedChar(SDRDATA[19]));
+    this->ui->textEdit_32->clear();
+    this->ui->textEdit_32->insertHtml(getStringFromUnsignedChar(SDRDATA[20]));
+    this->ui->textEdit_33->clear();
+    this->ui->textEdit_33->insertHtml(getStringFromUnsignedChar(SDRDATA[21]));
+    this->ui->textEdit_34->clear();
+    this->ui->textEdit_34->insertHtml(getStringFromUnsignedChar(SDRDATA[22]));
+    this->ui->textEdit_35->clear();
+    this->ui->textEdit_35->insertHtml(getStringFromUnsignedChar(SDRDATA[23]));
+    this->ui->textEdit_36->clear();
+    this->ui->textEdit_36->insertHtml(getStringFromUnsignedChar(SDRDATA[24]));
+    this->ui->textEdit_37->clear();
+    this->ui->textEdit_37->insertHtml(getStringFromUnsignedChar(SDRDATA[25]));
+    this->ui->textEdit_38->clear();
+    this->ui->textEdit_38->insertHtml(getStringFromUnsignedChar(SDRDATA[26]));
+    //20200529
 }
 
 void MainWindow::on_pushButton_2_clicked()
@@ -1045,7 +1250,6 @@ void MainWindow::on_pushButton_2_clicked()
     else
         recData2->onTest=0;
     SDDATA[5] = inData2;
-
     //recData2->sp_byte;
     if (ui->checkBox_37->isChecked() == true){
         recData2->fcam1f=1;
@@ -1471,6 +1675,9 @@ void MainWindow::on_PUSH_2_clicked()
 {
     pushWhile=0;
     qDebug()<< "pushWhile=" << pushWhile;
+    ui->PUSH->setEnabled(true);
+    ui->PUSH_3->setEnabled(true);
+    ui->PUSH_2->setEnabled(false);
 }
 
 void MainWindow::on_PUSH_3_clicked()
@@ -1522,22 +1729,22 @@ void MainWindow::on_PUSH_3_clicked()
     SDRDATA[2] = ui->spinBox_2->value();
     sendData2->dataType = ui->spinBox_3->value();// 데이터 타입
     SDRDATA[3] = ui->spinBox_3->value();
-    sendData2->year = ui->spinBox_4->value();//year
-    SDRDATA[4] = ui->spinBox_4->value();
-    sendData2->month = ui->spinBox_5->value();//month
-    SDRDATA[5] = ui->spinBox_5->value();
-    sendData2->day = ui->spinBox_6->value();//day
-    SDRDATA[6] = ui->spinBox_6->value();
-    sendData2->hour = ui->spinBox_7->value();//hour
-    SDRDATA[7] = ui->spinBox_7->value();
-    sendData2->min = ui->spinBox_8->value();//minute
-    SDRDATA[8] = ui->spinBox_8->value();
-    sendData2->sec = ui->spinBox_9->value();//second
-    SDRDATA[9] = ui->spinBox_9->value();
-    sendData2->trainNum1 = ui->spinBox_10->value();
-    SDRDATA[10] = ui->spinBox_10->value();
-    sendData2->trainNum2 = ui->spinBox_11->value();
-    SDRDATA[11] = ui->spinBox_11->value();
+    sendData2->year = to_bcd(ui->spinBox_4->value());//year
+    SDRDATA[4] = to_bcd(ui->spinBox_4->value());
+    sendData2->month = to_bcd(ui->spinBox_5->value());//month
+    SDRDATA[5] = to_bcd(ui->spinBox_5->value());
+    sendData2->day = to_bcd(ui->spinBox_6->value());//day
+    SDRDATA[6] = to_bcd(ui->spinBox_6->value());
+    sendData2->hour = to_bcd(ui->spinBox_7->value());//hour
+    SDRDATA[7] = to_bcd(ui->spinBox_7->value());
+    sendData2->min = to_bcd(ui->spinBox_8->value());//minute
+    SDRDATA[8] = to_bcd(ui->spinBox_8->value());
+    sendData2->sec = to_bcd(ui->spinBox_9->value());//second
+    SDRDATA[9] = to_bcd(ui->spinBox_9->value());
+    sendData2->trainNum1 = to_bcd(ui->spinBox_10->value());
+    SDRDATA[10] = to_bcd(ui->spinBox_10->value());
+    sendData2->trainNum2 = to_bcd(ui->spinBox_11->value());
+    SDRDATA[11] = to_bcd(ui->spinBox_11->value());
     sendData2->speed = ui->spinBox_12->value();// 속도 SPEED
     SDRDATA[12] = ui->spinBox_12->value();
 
@@ -1561,11 +1768,15 @@ void MainWindow::on_PUSH_3_clicked()
 
     if (ui->checkBox_16->isChecked() == true) // 시험요청여부
         sendData2->test_start_req=1;
-    sendData2->sp_bit0 = ui->spinBox_23->value(); // spare
-    if (sendData2->test_start_req==1)
-        SDRDATA[19] = sendData2->sp_bit0 + 0x80;
     else
-        SDRDATA[19] = sendData2->sp_bit0;
+        sendData2->test_start_req=0;
+    //sendData2->sp_bit0 = ui->spinBox_23->value(); // spare
+    if (sendData2->test_start_req==1)
+        SDRDATA[19] = 0x80;
+    else
+        SDRDATA[19] = 0x00;
+
+    //qDebug() << SDRDATA[19] << "why 80?";
 
     int countdata = ui->comboBox->currentIndex();//운전모드
     if (countdata == 0){sendData2->drive_DM=1;
@@ -1684,6 +1895,63 @@ void MainWindow::on_PUSH_3_clicked()
     {
         this->ui->textEdit_2->insertHtml(getStringFromUnsignedChar(SDRDATA[i]));
     }
-    this->ui->textEdit_9->clear();
-    this->ui->textEdit_9->insertHtml(getStringFromUnsignedChar(SDRDATA[ui->spinBox_34->value()]));
+    this->ui->textEdit_11->clear();
+    this->ui->textEdit_11->insertHtml(getStringFromUnsignedChar(SDRDATA[0]));
+    this->ui->textEdit_13->clear();
+    this->ui->textEdit_13->insertHtml(getStringFromUnsignedChar(SDRDATA[1]));
+    this->ui->textEdit_14->clear();
+    this->ui->textEdit_14->insertHtml(getStringFromUnsignedChar(SDRDATA[2]));
+    this->ui->textEdit_15->clear();
+    this->ui->textEdit_15->insertHtml(getStringFromUnsignedChar(SDRDATA[3]));
+    this->ui->textEdit_16->clear();
+    this->ui->textEdit_16->insertHtml(getStringFromUnsignedChar(SDRDATA[4]));
+    this->ui->textEdit_17->clear();
+    this->ui->textEdit_17->insertHtml(getStringFromUnsignedChar(SDRDATA[5]));
+    this->ui->textEdit_18->clear();
+    this->ui->textEdit_18->insertHtml(getStringFromUnsignedChar(SDRDATA[6]));
+    this->ui->textEdit_19->clear();
+    this->ui->textEdit_19->insertHtml(getStringFromUnsignedChar(SDRDATA[7]));
+    this->ui->textEdit_20->clear();
+    this->ui->textEdit_20->insertHtml(getStringFromUnsignedChar(SDRDATA[8]));
+    this->ui->textEdit_21->clear();
+    this->ui->textEdit_21->insertHtml(getStringFromUnsignedChar(SDRDATA[9]));
+    this->ui->textEdit_22->clear();
+    this->ui->textEdit_22->insertHtml(getStringFromUnsignedChar(SDRDATA[10]));
+    this->ui->textEdit_23->clear();
+    this->ui->textEdit_23->insertHtml(getStringFromUnsignedChar(SDRDATA[11]));
+    this->ui->textEdit_24->clear();
+    this->ui->textEdit_24->insertHtml(getStringFromUnsignedChar(SDRDATA[12]));
+    this->ui->textEdit_25->clear();
+    this->ui->textEdit_25->insertHtml(getStringFromUnsignedChar(SDRDATA[13]));
+    this->ui->textEdit_26->clear();
+    this->ui->textEdit_26->insertHtml(getStringFromUnsignedChar(SDRDATA[14]));
+    this->ui->textEdit_27->clear();
+    this->ui->textEdit_27->insertHtml(getStringFromUnsignedChar(SDRDATA[15]));
+    this->ui->textEdit_28->clear();
+    this->ui->textEdit_28->insertHtml(getStringFromUnsignedChar(SDRDATA[16]));
+    this->ui->textEdit_29->clear();
+    this->ui->textEdit_29->insertHtml(getStringFromUnsignedChar(SDRDATA[17]));
+    this->ui->textEdit_30->clear();
+    this->ui->textEdit_30->insertHtml(getStringFromUnsignedChar(SDRDATA[18]));
+    this->ui->textEdit_31->clear();
+    this->ui->textEdit_31->insertHtml(getStringFromUnsignedChar(SDRDATA[19]));
+    this->ui->textEdit_32->clear();
+    this->ui->textEdit_32->insertHtml(getStringFromUnsignedChar(SDRDATA[20]));
+    this->ui->textEdit_33->clear();
+    this->ui->textEdit_33->insertHtml(getStringFromUnsignedChar(SDRDATA[21]));
+    this->ui->textEdit_34->clear();
+    this->ui->textEdit_34->insertHtml(getStringFromUnsignedChar(SDRDATA[22]));
+    this->ui->textEdit_35->clear();
+    this->ui->textEdit_35->insertHtml(getStringFromUnsignedChar(SDRDATA[23]));
+    this->ui->textEdit_36->clear();
+    this->ui->textEdit_36->insertHtml(getStringFromUnsignedChar(SDRDATA[24]));
+    this->ui->textEdit_37->clear();
+    this->ui->textEdit_37->insertHtml(getStringFromUnsignedChar(SDRDATA[25]));
+    this->ui->textEdit_38->clear();
+    this->ui->textEdit_38->insertHtml(getStringFromUnsignedChar(SDRDATA[26]));
+
+
+
+//    this->ui->textEdit_9->clear();
+//    this->ui->textEdit_9->insertHtml(getStringFromUnsignedChar(SDRDATA[ui->spinBox_34->value()]));
 }
